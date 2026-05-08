@@ -1,0 +1,64 @@
+name: Nightly OpenSearch sync + precompute
+
+# Runs after WWBH's pipeline (which runs at 00:00 UTC and writes new
+# sentences to Neon). Schedules at 02:00 UTC to give WWBH a generous
+# window to finish. Also exposes a manual trigger.
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # we commit refreshed /public/data/*.json back
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Neon → Bonsai (dry run)
+        env:
+          DRY_RUN: 'true'
+          OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
+          OPENSEARCH_USERNAME: ${{ secrets.OPENSEARCH_USERNAME }}
+          OPENSEARCH_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/sync-to-es.mjs
+
+      - name: Sync Neon → Bonsai (live)
+        env:
+          OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
+          OPENSEARCH_USERNAME: ${{ secrets.OPENSEARCH_USERNAME }}
+          OPENSEARCH_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/sync-to-es.mjs
+
+      - name: Precompute static graph + word data
+        env:
+          OPENSEARCH_URL: ${{ secrets.OPENSEARCH_URL }}
+          OPENSEARCH_USERNAME: ${{ secrets.OPENSEARCH_USERNAME }}
+          OPENSEARCH_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+        run: node scripts/precompute-graph.mjs
+
+      - name: Commit refreshed /public/data/*.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/*.json
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "nightly: refresh corpus data $(date -u +%Y-%m-%d)"
+            git push
+          fi
