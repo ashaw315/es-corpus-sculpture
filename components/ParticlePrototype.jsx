@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 // Step F Mode B prototype. Tests whether HTML5 Canvas can sustain 30+ FPS
 // at the target particle counts. The animation is intentionally simple
@@ -10,8 +10,6 @@ import { useEffect, useRef, useState } from 'react'
 
 export default function ParticlePrototype({ particleCount = 100 }) {
   const canvasRef = useRef(null)
-  const [fps, setFps] = useState(null)
-  const [avgFps, setAvgFps] = useState(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -96,15 +94,13 @@ export default function ParticlePrototype({ particleCount = 100 }) {
         )
       }
 
-      // Update FPS readout once a second
-      if (frameTimes.length === FRAME_AVG_WINDOW) {
+      // Periodic console FPS log — useful for headless perf capture and
+      // for the dev console while tuning particle counts.
+      if (frameTimes.length === FRAME_AVG_WINDOW
+          && allFrames.length % 60 === 0) {
         const avg = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length
-        setFps(Math.round(avg))
-        // Log to console too — useful for headless capture
-        if (allFrames.length % 60 === 0) {
-          // eslint-disable-next-line no-console
-          console.log(`particles=${particleCount} avgFps=${Math.round(avg)}`)
-        }
+        // eslint-disable-next-line no-console
+        console.log(`particles=${particleCount} avgFps=${Math.round(avg)}`)
       }
 
       raf = requestAnimationFrame(frame)
@@ -118,7 +114,6 @@ export default function ParticlePrototype({ particleCount = 100 }) {
       if (allFrames.length) {
         const tail = allFrames.slice(-Math.min(allFrames.length, 300))
         const avg = tail.reduce((a, b) => a + b, 0) / tail.length
-        setAvgFps(Math.round(avg))
         // eslint-disable-next-line no-console
         console.log(`final particles=${particleCount} avgFpsLast=${Math.round(avg)}`)
       }
@@ -137,13 +132,8 @@ export default function ParticlePrototype({ particleCount = 100 }) {
           pointerEvents: 'none',
         }}
       />
-      <div style={{
-        position: 'fixed', bottom: 24, left: 24,
-        color: '#888', fontFamily: 'monospace', fontSize: 12,
-        pointerEvents: 'none',
-      }}>
-        particles: {particleCount} · fps: {fps ?? '…'}
-      </div>
+      {/* The fps + particle-count readout is baked into the canvas itself
+          (see ctx.fillText in the draw loop). One indicator is enough. */}
     </>
   )
 }
