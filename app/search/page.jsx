@@ -181,6 +181,11 @@ export default function SearchPage() {
   const inRadial = selectedId && mltHits && !selectedWord && !inCharacterView
   const inWordView = !!selectedWord && !inCharacterView
   const inScale1 = !inRadial && !inWordView && !inCharacterView
+  // Pure network mode = the bare corpus map: no search, no selection, no
+  // deeper scale active. Used to gate the "texture →" button so it only
+  // shows when there's somewhere to texturize *from*.
+  const inNetworkOnly =
+    inScale1 && !query && !selectedId && !hits
   const selectedNode = selectedId ? nodesById?.get(selectedId) : null
 
   // Wrap setHighlightIds in useCallback so the CharacterView's effect dep
@@ -300,9 +305,11 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* "texture" button — visible only in Scale 1 (network/beeswarm/radial)
-          since Scale 3 already takes over the chrome. Subtle, low-contrast. */}
-      {!inWordView && !inCharacterView && (
+      {/* "texture" button — visible only in pure Scale 1 network mode.
+          Hidden whenever the user is in beeswarm, radial, word, or
+          character view, since the button has no contextual meaning
+          inside a deeper scale. */}
+      {inNetworkOnly && (
         <div style={{
           position: 'fixed',
           top: 18,
