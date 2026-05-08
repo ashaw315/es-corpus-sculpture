@@ -363,13 +363,28 @@ export default function SculptureCanvas({
 
       // ====== mode appliers ======
 
+      // Hard-reset every per-node <text class="label"> back to its initial
+      // appearance: hidden, the first-4-words text, monospace at 11px,
+      // dy aligned to baseR. Called at the top of every mode-apply so
+      // residue from radial (per-style typography, "first 6 words" text,
+      // 14px, dy=-r-8) or hover (opacity 1) doesn't bleed into the next
+      // mode. interrupt() cuts in-flight transitions so the reset wins.
+      function resetLabelsToDefault() {
+        nodeSel.select('text.label')
+          .interrupt()
+          .style('opacity', 0)
+          .style('font-family', 'monospace')
+          .style('font-style', 'normal')
+          .attr('font-size', 11)
+          .attr('dy', d => -d.baseR - 6)
+          .text(d => firstWords(d.sentence, 4))
+      }
+
       function applyNetwork() {
         sceneRef.current.mode = 'network'
 
-        // Hover state from a prior mode can leave per-node labels at full
-        // opacity — kill any leftover hover residue before painting the
-        // new mode's own state.
-        nodeSel.select('text.label').interrupt().style('opacity', 0)
+        // Full label reset — see resetLabelsToDefault doc.
+        resetLabelsToDefault()
 
         // Nodes back to base size, full color, full opacity, pointer-active
         nodeSel.select('circle')
@@ -380,11 +395,7 @@ export default function SculptureCanvas({
           .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
           .style('opacity', 1)
           .style('pointer-events', 'auto')
-        // Reset typography to default
-        nodeSel.select('text.label')
-          .style('font-family', 'monospace')
-          .style('font-style', 'normal')
-          .attr('font-size', 11)
+        // (Label typography reset is handled by resetLabelsToDefault above.)
         // Release any radial pinning
         simNodes.forEach(d => { d.fx = null; d.fy = null; d.r = d.baseR })
 
@@ -413,19 +424,12 @@ export default function SculptureCanvas({
       function applyBeeswarm() {
         sceneRef.current.mode = 'beeswarm'
 
+        // Full label reset — see resetLabelsToDefault doc.
+        resetLabelsToDefault()
         // Clear radial-only UI on entry
         arcLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         // Release any radial pinning
         simNodes.forEach(d => { d.fx = null; d.fy = null })
-        // Wipe leftover hover label opacity from network mode — beeswarm
-        // doesn't use these labels and the mouseenter gate skips them in
-        // this mode, so any opacity:1 from before would stick.
-        nodeSel.select('text.label').interrupt().style('opacity', 0)
-        // Restore default label typography
-        nodeSel.select('text.label')
-          .style('font-family', 'monospace')
-          .style('font-style', 'normal')
-          .attr('font-size', 11)
         // Restore opacity / pointer-events on all nodes
         nodeSel.style('opacity', 1).style('pointer-events', 'auto')
 
