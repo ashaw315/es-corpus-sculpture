@@ -27,7 +27,11 @@ export async function indexDocs(client, index, docs) {
     { doc, doc_as_upsert: true },
   ])
 
-  const response = await client.bulk({ body: operations })
+  // refresh: 'wait_for' blocks until newly-indexed docs are visible to search,
+  // so any caller that runs precompute right after sync sees a consistent
+  // corpus. Without this, the next /_search can miss just-indexed docs and
+  // emit an inconsistent graph (precompute fetches twice — see CLAUDE.md).
+  const response = await client.bulk({ refresh: 'wait_for', body: operations })
   // OpenSearch JS v3 returns the parsed body directly; v2 wraps in { body }.
   const result = response.body ?? response
 

@@ -120,10 +120,18 @@ async function fetchAllDocs(client, index) {
   return docs
 }
 
-export async function buildGraph(client, index) {
-  const docs = await fetchAllDocs(client, index)
-  const graph = Object.create(null)
+// Caller passes docs explicitly — precomputeAll fetches them once and shares
+// them across every output, so nodes.json and graph.json can never diverge
+// when OpenSearch indexes a new doc mid-run.
+export async function buildGraph(client, docs, index) {
+  // Back-compat for callers that pass an index string instead of a docs array
+  // (kept for the integration tests that still call buildGraph(client, INDEX)).
+  if (typeof docs === 'string') {
+    index = docs
+    docs = await fetchAllDocs(client, index)
+  }
 
+  const graph = Object.create(null)
   for (const doc of docs) {
     const neonId = doc.neon_id || doc.id
     // Request one extra so the self-exclude filter still leaves us with the
@@ -148,7 +156,7 @@ export async function precomputeAll({ client, index, outDir }) {
 
   const docs = await fetchAllDocs(client, index)
   const nodes = buildNodes(docs)
-  const graph = await buildGraph(client, index)
+  const graph = await buildGraph(client, docs, index)
   const { words, wordIndex } = buildWordsAndIndex(docs)
   const chars = buildChars(docs)
 
