@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import { STYLE_COLOR, DEFAULT_COLOR } from '../lib/palette.mjs'
 
 // Scale 3 — Word view. Two panels for one selected word:
 //
@@ -15,16 +16,6 @@ import * as d3 from 'd3'
 // Loads /public/data/{nodes,word-index,words}.json once and computes
 // co-occurrence on demand. Self-contained — does not share state with
 // SculptureCanvas.
-
-const STYLE_COLOR = {
-  'LIMINAL':           'hsl(220, 70%, 60%)',
-  'SENSORY/TEXTURAL':  'hsl(140, 65%, 55%)',
-  'ABSTRACT':          'hsl(35, 80%, 60%)',
-  'REPLETE':           'hsl(180, 60%, 55%)',
-  'REPRESENTATIONAL':  'hsl(280, 60%, 65%)',
-  'GLITCH/SYSTEM':     'hsl(0, 70%, 60%)',
-}
-const DEFAULT_COLOR = 'hsl(0, 0%, 70%)'
 
 // Compute the top N words that co-occur with `word` in any sentence.
 // Output: [{ word, count, freq }] sorted by count desc, then by global
@@ -317,32 +308,8 @@ export default function WordView({
     >
       <svg ref={svgRef} style={{ display: 'block' }} />
 
-      {/* Panel toggle in top-right */}
-      {data && (
-        <div style={{
-          position: 'absolute', top: 18, right: 24,
-          fontFamily: 'monospace', fontSize: 12,
-          display: 'flex', gap: 14,
-          color: '#666',
-          pointerEvents: 'auto',
-        }}>
-          <span
-            onClick={() => onSetPanel?.('timeline')}
-            style={{
-              cursor: 'pointer',
-              color: panel === 'timeline' ? '#ddd' : '#555',
-            }}
-          >timeline</span>
-          <span style={{ color: '#333' }}>·</span>
-          <span
-            onClick={() => onSetPanel?.('cooccurrence')}
-            style={{
-              cursor: 'pointer',
-              color: panel === 'cooccurrence' ? '#ddd' : '#555',
-            }}
-          >co-occurrence</span>
-        </div>
-      )}
+      {/* Panel toggle moved to the bottom legend strip in Step I.
+          See <LegendStrip> in app/search/page.jsx. */}
 
       {/* Hover tooltip for Panel A */}
       {hoverDoc && (

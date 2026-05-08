@@ -5,6 +5,8 @@ import SculptureCanvas from '../../components/SculptureCanvas'
 import WordView from '../../components/WordView'
 import CharacterView from '../../components/CharacterView'
 import ParticlePrototype from '../../components/ParticlePrototype'
+import LegendStrip from '../../components/LegendStrip'
+import { STYLE_FONT, DEFAULT_FONT } from '../../lib/palette.mjs'
 
 // Steps E + F — Scales 1, 1b, 2, 3, 4. Page owns the navigation state
 // machine:
@@ -17,18 +19,6 @@ import ParticlePrototype from '../../components/ParticlePrototype'
 // Escape pops one level. Order: character view → word → sentence → query/net.
 
 const DEBOUNCE_MS = 250
-
-// Same per-style typography as the canvas's ring labels — the center
-// sentence overlay matches its style_mode treatment.
-const STYLE_FONT = {
-  'LIMINAL':           { family: 'Georgia, serif',          style: 'italic' },
-  'SENSORY/TEXTURAL':  { family: '"Courier New", monospace', style: 'normal' },
-  'ABSTRACT':          { family: 'Impact, "Arial Narrow", sans-serif', style: 'normal' },
-  'REPLETE':           { family: 'system-ui, sans-serif',    style: 'normal' },
-  'REPRESENTATIONAL':  { family: 'system-ui, sans-serif',    style: 'normal' },
-  'GLITCH/SYSTEM':     { family: '"Courier New", monospace', style: 'normal' },
-}
-const DEFAULT_FONT = { family: 'system-ui, sans-serif', style: 'normal' }
 
 // Lowercased alpha-only key for word-index lookup.
 function tokenKey(displayWord) {
@@ -211,6 +201,76 @@ export default function SearchPage() {
   const centerTreatment =
     selectedNode ? (STYLE_FONT[selectedNode.style_mode] || DEFAULT_FONT) : DEFAULT_FONT
 
+  // ===== Legend-strip content per current view =====
+  // Derive the scale name + center label + right-slot control from the
+  // existing state. Right-slot is a small monospace control set (a button
+  // or an inline toggle); style is consistent with the rest of the strip.
+  const totalSentences = nodesById ? nodesById.size : null
+  let legendScale = 'corpus'
+  let legendCenter = totalSentences ? `${totalSentences} sentences` : ''
+  let legendRight = null
+
+  if (inCharacterView) {
+    legendScale = 'character'
+    legendCenter = 'character frequency'
+    legendRight = (
+      <span style={{ display: 'inline-flex', gap: 14 }}>
+        <span
+          onClick={() => setCharacterMode('histogram')}
+          style={{
+            cursor: 'pointer',
+            color: characterMode === 'histogram' ? '#1a1a1a' : '#9a958c',
+          }}
+        >histogram</span>
+        <span style={{ color: '#9a958c' }}>·</span>
+        <span
+          onClick={() => setCharacterMode('particles')}
+          style={{
+            cursor: 'pointer',
+            color: characterMode === 'particles' ? '#1a1a1a' : '#9a958c',
+          }}
+        >particles</span>
+      </span>
+    )
+  } else if (inWordView) {
+    legendScale = 'word'
+    legendCenter = `word: ${selectedWord}`
+    legendRight = (
+      <span style={{ display: 'inline-flex', gap: 14 }}>
+        <span
+          onClick={() => setWordPanel('timeline')}
+          style={{
+            cursor: 'pointer',
+            color: wordPanel === 'timeline' ? '#1a1a1a' : '#9a958c',
+          }}
+        >timeline</span>
+        <span style={{ color: '#9a958c' }}>·</span>
+        <span
+          onClick={() => setWordPanel('cooccurrence')}
+          style={{
+            cursor: 'pointer',
+            color: wordPanel === 'cooccurrence' ? '#1a1a1a' : '#9a958c',
+          }}
+        >co-occurrence</span>
+      </span>
+    )
+  } else if (inRadial) {
+    legendScale = 'sentence'
+    legendCenter = `${selectedId} · ${selectedNode?.style_mode ?? '?'}`
+    legendRight = <span style={{ color: '#9a958c' }}>esc to exit</span>
+  } else if (query && hits) {
+    legendScale = 'corpus'
+    legendCenter = `${hits.length} result${hits.length === 1 ? '' : 's'}`
+  } else if (inNetworkOnly) {
+    // Texture button lives here in pure network mode; relations → arrives in Step IV.
+    legendRight = (
+      <span
+        style={{ cursor: 'pointer', color: '#1a1a1a' }}
+        onClick={() => setInCharacterView(true)}
+      >texture →</span>
+    )
+  }
+
   return (
     <>
       {/* Top-left status / search input (visible across all scales) */}
@@ -245,21 +305,8 @@ export default function SearchPage() {
             pointerEvents: 'auto',
           }}
         />
-        {query && hits && !inRadial && !inWordView && (
-          <div style={{ color: '#666', fontFamily: 'monospace', fontSize: 11 }}>
-            {hits.length} result{hits.length === 1 ? '' : 's'}
-          </div>
-        )}
-        {inRadial && (
-          <div style={{ color: '#666', fontFamily: 'monospace', fontSize: 11 }}>
-            {selectedId} · {selectedNode?.style_mode ?? '?'} · esc to exit
-          </div>
-        )}
-        {inWordView && (
-          <div style={{ color: '#666', fontFamily: 'monospace', fontSize: 11 }}>
-            word: {selectedWord} · esc to return
-          </div>
-        )}
+        {/* View status (result count, radial badge, word badge) lives in
+            the legend strip at the bottom — see <LegendStrip> below. */}
       </div>
 
       {/* Center-sentence HTML overlay — Scale 2 only. Per-word clickable
@@ -305,27 +352,8 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* "texture" button — visible only in pure Scale 1 network mode.
-          Hidden whenever the user is in beeswarm, radial, word, or
-          character view, since the button has no contextual meaning
-          inside a deeper scale. */}
-      {inNetworkOnly && (
-        <div style={{
-          position: 'fixed',
-          top: 18,
-          right: 24,
-          zIndex: 10,
-          color: '#555',
-          fontFamily: 'monospace',
-          fontSize: 12,
-          cursor: 'pointer',
-          pointerEvents: 'auto',
-        }}
-          onClick={() => setInCharacterView(true)}
-        >
-          texture →
-        </div>
-      )}
+      {/* The "texture →" button moved to the legend strip's right slot
+          in network mode. See <LegendStrip> below. */}
 
       {/* Scene rendering. WordView fully replaces the canvas. CharacterView
           overlays the dimmed canvas as a backdrop. */}
@@ -357,42 +385,16 @@ export default function SearchPage() {
           {inCharacterView && characterMode === 'particles' && (
             <ParticlePrototype particleCount={particleCount} />
           )}
-          {/* Single mode toggle for Scale 4, positioned consistently with
-              the other top-right chrome regardless of which Mode is active. */}
-          {inCharacterView && (
-            <div style={{
-              position: 'fixed', top: 18, right: 24,
-              fontFamily: 'monospace', fontSize: 12,
-              color: '#555', zIndex: 11, pointerEvents: 'auto',
-            }}>
-              <span
-                style={{
-                  cursor: 'pointer',
-                  color: characterMode === 'histogram' ? '#ddd' : '#555',
-                }}
-                onClick={() => setCharacterMode('histogram')}
-              >histogram</span>
-              <span style={{ color: '#333', margin: '0 8px' }}>·</span>
-              <span
-                style={{
-                  cursor: 'pointer',
-                  color: characterMode === 'particles' ? '#ddd' : '#555',
-                }}
-                onClick={() => setCharacterMode('particles')}
-              >particles</span>
-            </div>
-          )}
-          {inCharacterView && (
-            <div style={{
-              position: 'fixed', top: 56, left: 16,
-              color: '#666', fontFamily: 'monospace', fontSize: 11,
-              zIndex: 10, pointerEvents: 'none',
-            }}>
-              scale 4: characters · esc to return
-            </div>
-          )}
+          {/* Scale 4 mode toggle (histogram · particles) and "scale 4"
+              status badge moved to the legend strip below. */}
         </>
       )}
+
+      <LegendStrip
+        scale={legendScale}
+        centerLabel={legendCenter}
+        right={legendRight}
+      />
     </>
   )
 }

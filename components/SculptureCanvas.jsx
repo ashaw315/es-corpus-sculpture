@@ -2,45 +2,20 @@
 
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import {
+  STYLE_COLOR,
+  STYLE_COLOR_FADED,
+  DEFAULT_COLOR,
+  DEFAULT_FADED,
+  STYLE_FONT,
+  DEFAULT_FONT,
+} from '../lib/palette.mjs'
 
 // Scales 1, 1b, and 2 — corpus network, beeswarm search, and radial arc.
 // Mode priority: selectedId set → radial; else query+hits → beeswarm; else network.
 // Loads precomputed /public/data/{nodes,graph}.json once and shares the
 // same SVG / simulation / node selection across modes; transitions are
 // driven by force swap + alpha restart + attribute tweens.
-
-const STYLE_COLOR = {
-  'LIMINAL':           'hsl(220, 70%, 60%)',
-  'SENSORY/TEXTURAL':  'hsl(140, 65%, 55%)',
-  'ABSTRACT':          'hsl(35, 80%, 60%)',
-  'REPLETE':           'hsl(180, 60%, 55%)',
-  'REPRESENTATIONAL':  'hsl(280, 60%, 65%)',
-  'GLITCH/SYSTEM':     'hsl(0, 70%, 60%)',
-}
-// Fade target = darker, lower-saturation HSL of the same hue family.
-// Stays *opaque* so edges crossing the node body are occluded — fixes the
-// wedge/spoke artifact that translucent fades produced.
-const STYLE_COLOR_FADED = {
-  'LIMINAL':           'hsl(220, 30%, 22%)',
-  'SENSORY/TEXTURAL':  'hsl(140, 30%, 20%)',
-  'ABSTRACT':          'hsl(35, 35%, 22%)',
-  'REPLETE':           'hsl(180, 30%, 20%)',
-  'REPRESENTATIONAL':  'hsl(280, 25%, 25%)',
-  'GLITCH/SYSTEM':     'hsl(0, 30%, 22%)',
-}
-const DEFAULT_COLOR = 'hsl(0, 0%, 70%)'
-const DEFAULT_FADED = 'hsl(0, 0%, 22%)'
-
-// Style_mode → typographic treatment for radial-mode labels.
-const STYLE_FONT = {
-  'LIMINAL':           { family: 'Georgia, serif',          style: 'italic' },
-  'SENSORY/TEXTURAL':  { family: '"Courier New", monospace', style: 'normal' },
-  'ABSTRACT':          { family: 'Impact, "Arial Narrow", sans-serif', style: 'normal' },
-  'REPLETE':           { family: 'system-ui, sans-serif',    style: 'normal' },
-  'REPRESENTATIONAL':  { family: 'system-ui, sans-serif',    style: 'normal' },
-  'GLITCH/SYSTEM':     { family: '"Courier New", monospace', style: 'normal' },
-}
-const DEFAULT_FONT = { family: 'system-ui, sans-serif', style: 'normal' }
 
 const EDGE_WIDTH_DOMAIN = [10, 70]
 const EDGE_WIDTH_RANGE = [0.4, 2.4]
