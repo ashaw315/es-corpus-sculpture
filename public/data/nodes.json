@@ -450,16 +450,6 @@
     "length": 515
   },
   {
-    "id": "runs-88",
-    "sentence": "A botanist kneels in a freshly excavated pit behind the public library, carefully brushing sediment from a fossilized laptop screen that displays a half-finished taxonomy chart, while Greek letters carved into nearby tree roots seem to rearrange themselves into new hierarchical patterns. Twenty-three spiral notebooks float up from the dig site like moths, their pages fluttering open to reveal the same triangle diagram copied in different handwriting, each one smelling of underground decay and old Wikipedia printouts.",
-    "title": null,
-    "date": "2026-05-09",
-    "mode": null,
-    "style_mode": "REPRESENTATIONAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/datamosh.mp4",
-    "length": 522
-  },
-  {
     "id": "runs-86",
     "sentence": "A student's 2AM physics homework dissolves into cascading error dialogs as \"ECONOMIC_TECHNOLOGISTS.exe has stopped working\" while eraser shavings pixelate into white noise and astronomical timestamps corrupt into flickering Planck constants that stutter between [BUFFER_OVERFLOW] and the soft blue glow of a frozen loading bar. The dorm room fragments into offset RGB channels where Big Bang spacetime calculations melt into beautiful color banding as relativistic clock faces spin endlessly in corrupted 24-hour loops, their numbers bleeding into hex addresses that spell out exhausted prayers in broken Unicode.",
     "title": "Study of Corrupted Clock Faces in Relativistic Hex Decay — TF-086-12",
@@ -468,5 +458,15 @@
     "style_mode": "GLITCH/SYSTEM",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/datamosh.mp4",
     "length": 613
+  },
+  {
+    "id": "runs-88",
+    "sentence": "A botanist kneels in a freshly excavated pit behind the public library, carefully brushing sediment from a fossilized laptop screen that displays a half-finished taxonomy chart, while Greek letters carved into nearby tree roots seem to rearrange themselves into new hierarchical patterns. Twenty-three spiral notebooks float up from the dig site like moths, their pages fluttering open to reveal the same triangle diagram copied in different handwriting, each one smelling of underground decay and old Wikipedia printouts.",
+    "title": "Fragment of Excavated Hierarchical Diagrams Recovered Beneath Municipal Grounds — TF-088-28",
+    "date": "2026-05-09",
+    "mode": 0,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/datamosh.mp4",
+    "length": 522
   }
 ]
