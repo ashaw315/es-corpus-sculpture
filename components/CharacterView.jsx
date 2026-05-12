@@ -4,13 +4,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 // Scale 4 — Character view.
 //
-// Mode A: 26-bar a–z frequency histogram. Hovering a bar pushes the set
-// of doc ids where that letter is "above-average frequent" up via
-// onHighlightIds, so the dimmed network backdrop (rendered by the page
-// underneath) brightens the matching sentences — a cross-scale link.
-//
-// Mode B is rendered in a separate <ParticlePrototype> component (see
-// components/ParticlePrototype.jsx) for performance isolation.
+// 26-bar a–z frequency histogram. Hovering a bar pushes the set of doc
+// ids where that letter is "above-average frequent" up via onHighlightIds,
+// so the dimmed network backdrop (rendered by the page underneath)
+// brightens the matching sentences — a cross-scale link.
 
 const ABOVE_AVG_THRESHOLD = 1.15 // 15% above corpus average to count as "frequent"
 const BAR_HUE_END = 260 // a = 0°, z = 260°
@@ -143,9 +140,6 @@ export default function CharacterView({ onHighlightIds, onModeChange, mode = 'hi
         preserveAspectRatio="xMidYMid meet"
         style={{ display: 'block', pointerEvents: 'auto' }}
       >
-        {/* Mode toggle is rendered by the page so its position matches the
-            other top-right chrome (texture button, word-view toggle). */}
-
         {/* Bars */}
         {layout.letters.map((letter, i) => {
           const count = layout.chars[letter] || 0

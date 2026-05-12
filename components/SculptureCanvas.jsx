@@ -3,24 +3,30 @@
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import {
-  STYLE_COLOR,
-  STYLE_COLOR_FADED,
+  PALETTE_SETS,
   DEFAULT_COLOR,
-  DEFAULT_FADED,
+  fadedColorFor,
   STYLE_FONT,
   DEFAULT_FONT,
 } from '../lib/palette.mjs'
-
-// Scales 1, 1b, and 2 — corpus network, beeswarm search, and radial arc.
+// Scales 1, 1b, and 2 — animated corpus dots, beeswarm search, radial arc.
 // Mode priority: selectedId set → radial; else query+hits → beeswarm; else network.
 // Loads precomputed /public/data/{nodes,graph}.json once and shares the
-// same SVG / simulation / node selection across modes; transitions are
-// driven by force swap + alpha restart + attribute tweens.
+// same SVG / simulation / node selection across modes.
+//
+// Network mode (animated line drawing): nodes are positioned by a force
+// sim that runs once at init then freezes. Each node renders as a small
+// colored dot. An autonomous engine activates a random node every 2s —
+// activation draws thin lines from the node to its MLT neighbors with a
+// pen-plotting effect (stroke-dasharray tween over 800ms), holds for 1s,
+// then fades over 1.5s. Multiple activations run in parallel so the
+// canvas always has a few line sets in flight at different stages.
+// Hovering a node activates it immediately and pauses the timer.
+// Beeswarm and radial reuse the same simulation with their own forces;
+// transitions stop the engine and clear in-flight lines.
 
-const EDGE_WIDTH_DOMAIN = [10, 70]
-const EDGE_WIDTH_RANGE = [0.4, 2.4]
-const EDGE_OPACITY = 0.2
 const TRANSITION_MS = 800
+const CELL_FADE_MS = 400
 
 // Radial-mode geometry. Inner ring holds top 3 MLT neighbors, outer ring
 // holds the next 4. Numbers tuned for a 1440x900 viewport.
@@ -72,7 +78,22 @@ export default function SculptureCanvas({
   // for cross-scale highlighting.
   dim = false,
   highlightIds = null,
+  // Page-owned session config: { palette, seed }. Page picks random
+  // values in a useEffect on first mount; we rebuild the scene whenever
+  // sessionConfig changes so all mode appliers' captured colors stay
+  // current. Default keeps SSR/first hydration deterministic. The seed
+  // isn't used by the activation engine (which uses Math.random for
+  // genuinely time-varying patterns) but is kept for parity with other
+  // session-stable bits (palette).
+  sessionConfig = {
+    palette: PALETTE_SETS[0],
+    seed: 1,
+  },
 }) {
+  const palette = sessionConfig.palette
+  const STYLE_COLOR = palette.colors
+  const fadedColor = (sm) => fadedColorFor(palette, sm)
+
   const svgRef = useRef(null)
   const wrapperRef = useRef(null)
   const [error, setError] = useState(null)
@@ -146,15 +167,17 @@ export default function SculptureCanvas({
         .attr('class', 'arcs')
         .style('opacity', 0)
 
-      const linkSel = root.append('g')
-        .attr('class', 'links')
-        .attr('stroke', '#fff')
-        .attr('stroke-opacity', EDGE_OPACITY)
-        .selectAll('line')
-        .data(links)
-        .join('line')
-        .attr('stroke-width', d =>
-          d3.scaleLinear().domain(EDGE_WIDTH_DOMAIN).range(EDGE_WIDTH_RANGE).clamp(true)(d.score))
+      // Line layer — one <line> per active activation, painted under
+      // nodes. Lines are appended dynamically by the animation engine
+      // and self-remove via a transition .on('end') handler.
+      const lineLayer = root.append('g')
+        .attr('class', 'activation-lines')
+        .style('pointer-events', 'none')
+
+      // (linkSel is dead from earlier iterations — kept as an empty
+      // selection so beeswarm/radial code that references it still
+      // returns a no-op selection rather than crashing.)
+      const linkSel = root.append('g').attr('class', 'links').selectAll('line')
 
       const nodeSel = root.append('g')
         .attr('class', 'nodes')
@@ -164,11 +187,13 @@ export default function SculptureCanvas({
         .attr('class', 'node')
         .style('cursor', 'pointer')
 
+      // Network-mode dot radius. Beeswarm and radial scale circles via
+      // their own d.r writes; applyNetwork resets back to NODE_DOT_R.
+      const NODE_DOT_R = 6
       nodeSel.append('circle')
-        .attr('r', d => d.r)
+        .attr('r', NODE_DOT_R)
         .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-        .attr('stroke', '#000')
-        .attr('stroke-width', 1.2)
+        .attr('stroke', 'none')
 
       nodeSel.append('text')
         .attr('class', 'label')
@@ -194,116 +219,191 @@ export default function SculptureCanvas({
         adjacency.get(target)?.add(source)
       }
 
+      // Hover focus on the corpus dots: the hovered node shows its
+      // label; the activation engine handles the visual link-drawing
+      // separately (see activateNode). No other node visuals change.
       function focusNode(focusId) {
-        const neighbors = adjacency.get(focusId) || new Set([focusId])
-        // Color-fade rather than opacity-fade — keeps faded nodes opaque so
-        // edges traversing their bodies don't show through as wedges.
-        nodeSel.select('circle')
-          .transition().duration(150)
-          .attr('fill', d => neighbors.has(d.id)
-            ? (STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-            : (STYLE_COLOR_FADED[d.style_mode] || DEFAULT_FADED))
         nodeSel.select('text.label')
-          .transition().duration(150)
-          .style('opacity', d => (d.id === focusId ? 1 : 0))
-        linkSel.transition().duration(150)
-          .attr('stroke-opacity', d =>
-            (d.source.id === focusId || d.target.id === focusId
-              ? 0.8
-              : EDGE_OPACITY * 0.3))
+          .style('opacity', d => d.id === focusId ? 1 : 0)
       }
 
-      function clearFocus() {
-        nodeSel.select('circle')
-          .transition().duration(150)
-          .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-        nodeSel.select('text.label').transition().duration(150).style('opacity', 0)
-        linkSel.transition().duration(150).attr('stroke-opacity', EDGE_OPACITY)
+      function clearNodeFocus() {
+        nodeSel.select('text.label').style('opacity', 0)
       }
 
-      // Drag tracks distance — short-distance "drag" = treat as click.
-      const drag = d3.drag()
-        .on('start', (event, d) => {
-          d.__dragStart = { x: event.x, y: event.y, moved: false }
-          if (!event.active) simulation.alphaTarget(0.3).restart()
-          d.fx = d.x; d.fy = d.y
-        })
-        .on('drag', (event, d) => {
-          const s = d.__dragStart
-          if (s && Math.hypot(event.x - s.x, event.y - s.y) > 4) s.moved = true
-          d.fx = event.x; d.fy = event.y
-        })
-        .on('end', (event, d) => {
-          if (!event.active) simulation.alphaTarget(0)
-          d.fx = null; d.fy = null
-          if (d.__dragStart && !d.__dragStart.moved && typeof onSelectRef.current === 'function') {
-            onSelectRef.current(d.id)
-          }
-          delete d.__dragStart
-        })
-
-      nodeSel.call(drag)
-
-      // onSelect can change between renders; keep a single ref object that
-      // both the drag handler and the prop-sync effect mutate, so dragging
-      // always invokes the current callback without re-binding.
+      // onSelect can change between renders; keep a single ref object
+      // that both the click handler and the prop-sync effect mutate, so
+      // clicks always invoke the current callback without re-binding.
       const onSelectRef = { current: null }
 
+      // Hovering state for the activation engine — held in a closure-
+      // shared object so node handlers and the interval can read/write
+      // the same flag without re-binding.
+      const isHoveringRef = { hovering: false }
+
+      // Node interactions:
+      //   - mouseenter: activate the node (engine draws lines), pause
+      //     the autonomous timer, show the hover label.
+      //   - mouseleave: hide label, resume timer.
+      //   - click: enter Scale 2 radial via onSelect.
+      // All gated to network mode — beeswarm/radial set their own
+      // handlers via the existing dim/click flows. activateNode and
+      // focusNode are defined further down in this scope; closures
+      // resolve them lazily when DOM events fire.
       nodeSel
         .on('mouseenter', (_event, d) => {
-          if (sceneRef.current.mode === 'network') focusNode(d.id)
+          if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+          isHoveringRef.hovering = true
+          focusNode(d.id)
+          activateNode(d.id)
         })
         .on('mouseleave', () => {
-          if (sceneRef.current.mode === 'network') clearFocus()
+          if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+          isHoveringRef.hovering = false
+          clearNodeFocus()
         })
-
-      // ?hover=runs-X debug param (kept from Step B for screenshot harness)
-      if (typeof window !== 'undefined') {
-        const hoverId = new URLSearchParams(window.location.search).get('hover')
-        if (hoverId && adjacency.has(hoverId)) {
-          // Defer to next tick so initial transitions don't fight it.
-          setTimeout(() => focusNode(hoverId), 50)
-        }
-      }
-
-      function placeLink(d) {
-        const sx = d.source.x, sy = d.source.y
-        const tx = d.target.x, ty = d.target.y
-        const dx = tx - sx, dy = ty - sy
-        const dist = Math.hypot(dx, dy) || 1
-        const ux = dx / dist, uy = dy / dist
-        return {
-          x1: sx + ux * d.source.r, y1: sy + uy * d.source.r,
-          x2: tx - ux * d.target.r, y2: ty - uy * d.target.r,
-        }
-      }
+        .on('click', (event, d) => {
+          event.stopPropagation()
+          if (typeof onSelectRef.current === 'function') {
+            onSelectRef.current(d.id)
+          }
+        })
 
       const simulation = d3.forceSimulation(simNodes)
         .force('link', d3.forceLink(links)
-          .id(d => d.id).distance(180).strength(0.4))
-        .force('charge', d3.forceManyBody().strength(-500))
+          .id(d => d.id).distance(220).strength(0.4))
+        .force('charge', d3.forceManyBody().strength(-700))
         .force('center', d3.forceCenter(W / 2, H / 2))
         .force('x', d3.forceX(W / 2).strength(0.06))
         .force('y', d3.forceY(H / 2).strength(0.14))
         .force('collide', d3.forceCollide(d => d.r + 6).iterations(2))
         .on('tick', () => {
-          linkSel.each(function(d) {
-            const p = placeLink(d)
-            this.setAttribute('x1', p.x1)
-            this.setAttribute('y1', p.y1)
-            this.setAttribute('x2', p.x2)
-            this.setAttribute('y2', p.y2)
-          })
+          // Beeswarm/radial reuse this simulation; only their forces are
+          // ticking. We just translate the circles. Cells stay frozen.
           nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
         })
 
+      // ---- Force-sim settle ----
+      //
+      // Run the simulation headlessly to settle nodes into their
+      // network layout, then pin and stop. The settled positions feed
+      // the activation engine (line endpoints) and serve as the
+      // restore-target when returning from beeswarm/radial.
       simulation.tick(300)
-      linkSel.each(function(d) {
-        const p = placeLink(d)
-        this.setAttribute('x1', p.x1); this.setAttribute('y1', p.y1)
-        this.setAttribute('x2', p.x2); this.setAttribute('y2', p.y2)
-      })
+      simulation.stop()
+      simNodes.forEach(d => { d.fx = d.x; d.fy = d.y })
       nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
+
+      // Cache the settled positions so applyNetwork can restore them
+      // after beeswarm/radial overwrite n.fx/fy with their own targets.
+      // `let` because the resize handler refreshes this when nodes
+      // settle into a new viewport.
+      let settledPositions = new Map(
+        simNodes.map(n => [n.id, { x: n.x, y: n.y }])
+      )
+
+      // ---- Activation engine ----
+      //
+      // Every 2 seconds (autonomous) or on hover (interactive), one
+      // node is "activated": short lines draw progressively from the
+      // node to each of its MLT neighbors using stroke-dashoffset
+      // tweens, hold for 1 second, then fade out over 1.5 seconds.
+      // Multiple activations overlap; at any moment 3-5 sets are in
+      // flight. The interval pauses while the user is hovering.
+
+      const ACTIVATION_INTERVAL_MS = 1200
+      const ACTIVATION_DRAW_MS = 800
+      const ACTIVATION_HOLD_MS = 1000
+      const ACTIVATION_FADE_MS = 1500
+      const ACTIVATION_MAX_OPACITY = 0.85
+
+      // Track every line element currently in flight so we can
+      // .interrupt().remove() them on mode transitions.
+      const activeLines = new Set()
+
+      function activateNode(nodeId) {
+        const source = nodeById.get(nodeId)
+        if (!source) return
+        const neighbors = (graph[nodeId] || [])
+          .map(({ id }) => nodeById.get(id))
+          .filter(Boolean)
+        const color = STYLE_COLOR[source.style_mode] || DEFAULT_COLOR
+
+        for (const target of neighbors) {
+          const dx = target.x - source.x
+          const dy = target.y - source.y
+          const totalLen = Math.hypot(dx, dy) || 1
+
+          const lineNode = lineLayer.append('line')
+            .attr('class', 'activation')
+            .attr('x1', source.x).attr('y1', source.y)
+            .attr('x2', target.x).attr('y2', target.y)
+            .attr('stroke', color)
+            .attr('stroke-width', 1.5)
+            .attr('stroke-opacity', 0)
+            .attr('stroke-dasharray', totalLen)
+            .attr('stroke-dashoffset', totalLen)
+            .node()
+
+          activeLines.add(lineNode)
+
+          d3.select(lineNode)
+            // Phase 1: draw — stroke pulls itself across the line
+            // while opacity rises to its hold value.
+            .transition().duration(ACTIVATION_DRAW_MS).ease(d3.easeCubicInOut)
+              .attr('stroke-dashoffset', 0)
+              .attr('stroke-opacity', ACTIVATION_MAX_OPACITY)
+            // Phase 2: hold (delay before phase 3 — d3 chains transitions
+            // sequentially via .transition() following another).
+            // Phase 3: fade out.
+            .transition().delay(ACTIVATION_HOLD_MS).duration(ACTIVATION_FADE_MS)
+            .ease(d3.easeCubicIn)
+              .attr('stroke-opacity', 0)
+            .on('end', function () {
+              activeLines.delete(this)
+              this.remove()
+            })
+            .on('interrupt', function () {
+              activeLines.delete(this)
+              this.remove()
+            })
+        }
+      }
+
+      let activationIntervalId = null
+
+      function startActivationEngine() {
+        if (activationIntervalId !== null) return
+        activationIntervalId = setInterval(() => {
+          if (isHoveringRef.hovering) return
+          if (sceneRef.current?.mode !== 'network') return
+          if (sceneRef.current?.dim) return
+          const i = Math.floor(Math.random() * simNodes.length)
+          activateNode(simNodes[i].id)
+        }, ACTIVATION_INTERVAL_MS)
+      }
+
+      function stopActivationEngine() {
+        if (activationIntervalId !== null) {
+          clearInterval(activationIntervalId)
+          activationIntervalId = null
+        }
+      }
+
+      function clearAllActivationLines() {
+        // .interrupt() triggers the 'interrupt' handler above, which
+        // removes the line from activeLines and the DOM.
+        for (const el of [...activeLines]) {
+          d3.select(el).interrupt()
+        }
+        // Defensive: any line that escaped activeLines tracking.
+        lineLayer.selectAll('line.activation').remove()
+        activeLines.clear()
+      }
+
+      // Kick the engine off — it'll fire its first activation in 2s.
+      startActivationEngine()
+
 
       const zoom = d3.zoom()
         .scaleExtent([0.2, 8])
@@ -315,20 +415,54 @@ export default function SculptureCanvas({
         const w = wrapperRef.current?.clientWidth || window.innerWidth
         const h = wrapperRef.current?.clientHeight || window.innerHeight
         svg.attr('width', w).attr('height', h).attr('viewBox', `0 0 ${w} ${h}`)
-        simulation.force('center', d3.forceCenter(w / 2, h / 2)).alpha(0.3).restart()
         sceneRef.current.W = w
         sceneRef.current.H = h
-        if (sceneRef.current.mode === 'beeswarm') applyBeeswarm()
+        if (sceneRef.current.mode === 'network') {
+          // Re-settle into the new viewport. Wipe in-flight activation
+          // lines first — their endpoints are about to become invalid
+          // when nodes shift. Then unpin, run a quick alpha=0.5 settle,
+          // re-pin, refresh the position cache, and restart the engine.
+          clearAllActivationLines()
+          stopActivationEngine()
+          simNodes.forEach(d => { d.fx = null; d.fy = null })
+          simulation
+            .force('center', d3.forceCenter(w / 2, h / 2))
+            .force('x', d3.forceX(w / 2).strength(0.06))
+            .force('y', d3.forceY(h / 2).strength(0.14))
+            .alpha(0.5)
+          simulation.tick(150)
+          simulation.stop()
+          simNodes.forEach(d => { d.fx = d.x; d.fy = d.y })
+          nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
+          settledPositions = new Map(
+            simNodes.map(n => [n.id, { x: n.x, y: n.y }])
+          )
+          startActivationEngine()
+        } else if (sceneRef.current.mode === 'beeswarm') {
+          simulation.force('center', d3.forceCenter(w / 2, h / 2)).alpha(0.3).restart()
+          applyBeeswarm()
+        } else if (sceneRef.current.mode === 'radial' && sceneRef.current.lastRadial) {
+          // Re-apply radial against new center.
+          const { centerId, mltHits } = sceneRef.current.lastRadial
+          applyRadial(centerId, mltHits)
+        }
       }
       window.addEventListener('resize', handleResize)
 
       // Pre-build immutable scene state.
       sceneRef.current = {
         svg, root, simulation, nodeSel, linkSel, axisLayer, arcLayer,
+        lineLayer,
         simNodes, nodeById, links, adjacency, W, H, mode: 'network',
+        dim: false,
+        settledPositions,
+        startActivationEngine, stopActivationEngine, clearAllActivationLines,
+        clearNodeFocus,
         dateHue, applyNetwork, applyBeeswarm, applyRadial, onSelectRef,
         cleanup: () => {
           window.removeEventListener('resize', handleResize)
+          stopActivationEngine()
+          clearAllActivationLines()
           simulation.stop()
         },
       }
@@ -357,55 +491,61 @@ export default function SculptureCanvas({
 
       function applyNetwork() {
         sceneRef.current.mode = 'network'
+        sceneRef.current.lastRadial = null
 
         // Full label reset — see resetLabelsToDefault doc.
         resetLabelsToDefault()
+        clearNodeFocus()
 
-        // Nodes back to base size, full color, full opacity, pointer-active
-        nodeSel.select('circle')
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('r', d => d.baseR)
-          .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
+        // Restore cached settled positions. Beeswarm/radial overwrite
+        // n.fx/fy with their own targets, so re-pin from the cache.
+        // Set radius to the small dot size used in network mode.
+        simNodes.forEach(d => {
+          const p = settledPositions.get(d.id)
+          if (p) {
+            d.x = p.x; d.y = p.y
+            d.fx = p.x; d.fy = p.y
+          }
+          d.r = NODE_DOT_R
+        })
+        nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
+        nodeSel.select('circle').attr('r', NODE_DOT_R)
+
+        // Stop the sim — corpus mode reads frozen positions, no ticking.
+        simulation.alpha(0).stop()
+
+        // Restore corpus visuals: nodes back to full opacity + interactive,
+        // ancillary layers (axis, arcs) fade out, activation engine
+        // resumes with a fresh start.
+        clearAllActivationLines()
         nodeSel
           .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
           .style('opacity', 1)
           .style('pointer-events', 'auto')
-        // (Label typography reset is handled by resetLabelsToDefault above.)
-        // Release any radial pinning
-        simNodes.forEach(d => { d.fx = null; d.fy = null; d.r = d.baseR })
-
-        // Edges visible at network opacity
-        linkSel.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('stroke-opacity', EDGE_OPACITY)
-
-        // Hide axis, arcs
         axisLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
         arcLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
-
-        // Restore network forces
-        const { W: w, H: h } = sceneRef.current
-        simulation
-          .force('link', d3.forceLink(links).id(d => d.id).distance(180).strength(0.4))
-          .force('charge', d3.forceManyBody().strength(-500))
-          .force('center', d3.forceCenter(w / 2, h / 2))
-          .force('x', d3.forceX(w / 2).strength(0.06))
-          .force('y', d3.forceY(h / 2).strength(0.14))
-          .force('collide', d3.forceCollide(d => d.r + 6).iterations(2))
-          .alpha(1).restart()
+        startActivationEngine()
       }
 
       function applyBeeswarm() {
         sceneRef.current.mode = 'beeswarm'
 
+        // Stop the activation engine and clear in-flight lines — the
+        // beeswarm transition shouldn't show stale corpus animation.
+        stopActivationEngine()
+        clearAllActivationLines()
+        clearNodeFocus()
+
         // Full label reset — see resetLabelsToDefault doc.
         resetLabelsToDefault()
         // Clear radial-only UI on entry
         arcLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
-        // Release any radial pinning
+        // Release any radial pinning so beeswarm forces can move nodes.
         simNodes.forEach(d => { d.fx = null; d.fy = null })
-        // Restore opacity / pointer-events on all nodes
+        // Make sure nodes are visible/interactive (corpus mode left
+        // them visible too, but other modes might not).
         nodeSel.style('opacity', 1).style('pointer-events', 'auto')
 
         const hitsArr = sceneRef.current.hits || []
@@ -451,11 +591,7 @@ export default function SculptureCanvas({
           .attr('r', d => d.r)
           .attr('fill', d => isHit(d.id)
             ? (STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-            : (STYLE_COLOR_FADED[d.style_mode] || DEFAULT_FADED))
-
-        // Hide edges in beeswarm.
-        linkSel.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('stroke-opacity', 0)
+            : fadedColor(d.style_mode))
 
         // Render the date axis. Recreate cleanly on each beeswarm apply.
         const axisGen = d3.axisBottom(x)
@@ -490,9 +626,16 @@ export default function SculptureCanvas({
 
       function applyRadial(centerId, mltHits) {
         sceneRef.current.mode = 'radial'
+        sceneRef.current.lastRadial = { centerId, mltHits }
 
         const center = nodeById.get(centerId)
         if (!center) return
+
+        // Stop the activation engine and clear in-flight lines — the
+        // radial composition shouldn't show stale corpus animation.
+        stopActivationEngine()
+        clearAllActivationLines()
+        clearNodeFocus()
 
         // Top 7 neighbors. If MLT returned fewer (rare on this corpus, but
         // possible for outlier seeds), the rings just have empty slots.
@@ -574,9 +717,7 @@ export default function SculptureCanvas({
           .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
           .style('opacity', d => (visibleIds.has(d.id) && d.id !== centerId) ? 0.85 : 0)
 
-        // Hide network edges (radial uses its own arc layer)
-        linkSel.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('stroke-opacity', 0)
+        // (No network edges to hide — Step II removed link rendering.)
 
         // Hide axis layer
         axisLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
@@ -642,7 +783,14 @@ export default function SculptureCanvas({
       sceneRef.current?.cleanup?.()
       sceneRef.current = null
     }
-  }, [])
+    // Rebuild the scene whenever sessionConfig changes — the appliers
+    // capture STYLE_COLOR / fadedColor in their closures and the corpus
+    // composition is seeded from sessionConfig.seed, so a fresh config
+    // means a fresh scene. On initial load this fires twice in quick
+    // succession (server default → page useEffect picks random values);
+    // the ~5ms cost (no force ticking now — pure template placement) is
+    // imperceptible.
+  }, [sessionConfig])
 
   // Mode swap on prop changes.
   useEffect(() => {
@@ -660,41 +808,41 @@ export default function SculptureCanvas({
     }
   }, [query, hits, selectedId, mltHits, onSelect, sceneReady])
 
-  // Step F: dim/highlight overlay. Runs after mode-apply so the brightening
-  // wins over whatever base color the active mode set.
+  // Scale 4 backdrop: dim the corpus dots to faded variants while
+  // highlightIds (above-average letter frequency) stay vivid. Also
+  // pauses the activation engine and clears in-flight lines, so the
+  // backdrop reads as still while the histogram owns the foreground.
   useEffect(() => {
     const scene = sceneRef.current
     if (!scene) return
-    const { nodeSel, linkSel } = scene
+    const { nodeSel } = scene
     if (!nodeSel) return
 
     const hi = highlightIds && highlightIds.size > 0 ? highlightIds : null
+    scene.dim = dim
+
+    function pickFill(d) {
+      if (hi && hi.has(d.id)) return STYLE_COLOR[d.style_mode] || DEFAULT_COLOR
+      return fadedColor(d.style_mode)
+    }
 
     if (dim) {
-      nodeSel.select('circle')
-        .transition().duration(200)
-        .attr('fill', d => {
-          if (hi && hi.has(d.id)) {
-            return STYLE_COLOR[d.style_mode] || DEFAULT_COLOR
-          }
-          return STYLE_COLOR_FADED[d.style_mode] || DEFAULT_FADED
-        })
-      // Edges always invisible in dim mode — they aren't useful at low alpha.
-      linkSel?.transition().duration(200).attr('stroke-opacity', 0)
-      // Disable hover handlers' work by preventing pointer interactions on
-      // dim-mode nodes — the histogram owns hover semantics now.
+      nodeSel.select('circle').transition().duration(200).attr('fill', pickFill)
       nodeSel.style('pointer-events', 'none')
+      scene.clearNodeFocus?.()
+      scene.stopActivationEngine?.()
+      scene.clearAllActivationLines?.()
     } else {
-      // Restore default pointer-events (network mode handles its own focus).
       nodeSel.style('pointer-events', 'auto')
-      // Don't override fills here — the active mode's apply will handle it
-      // on the next prop swap. If we're toggling dim off without changing
-      // mode (e.g. user just exited Scale 4), force a network-mode reapply.
+      // If we're toggling dim off without changing mode (i.e. user just
+      // exited Scale 4 back to corpus), restore vivid fills and resume
+      // the engine. If a mode change is what triggered dim=false, the
+      // mode applier handles fills on its own.
       if (scene.mode === 'network') {
         nodeSel.select('circle')
           .transition().duration(200)
           .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-        linkSel?.transition().duration(200).attr('stroke-opacity', EDGE_OPACITY)
+        scene.startActivationEngine?.()
       }
     }
   }, [dim, highlightIds, sceneReady])

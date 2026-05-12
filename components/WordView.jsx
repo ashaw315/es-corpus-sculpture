@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
-import { STYLE_COLOR, DEFAULT_COLOR } from '../lib/palette.mjs'
+import { PALETTE_SETS, DEFAULT_COLOR } from '../lib/palette.mjs'
 
 // Scale 3 — Word view. Two panels for one selected word:
 //
@@ -43,7 +43,10 @@ export default function WordView({
   onSelectSentence,
   onPivotWord,
   onSetPanel,
+  palette = PALETTE_SETS[0],
 }) {
+  const STYLE_COLOR = palette.colors
+
   const svgRef = useRef(null)
   const wrapperRef = useRef(null)
   const [data, setData] = useState(null) // { nodes, wordIndex, words }
@@ -102,7 +105,7 @@ export default function WordView({
     } else {
       renderCooccurrence(svg, W, H)
     }
-  }, [data, word, panel, containingDocs, cooccurring])
+  }, [data, word, panel, containingDocs, cooccurring, palette])
 
   function renderTimeline(svg, W, H) {
     if (containingDocs.length === 0) {

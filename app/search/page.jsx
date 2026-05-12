@@ -4,9 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import SculptureCanvas from '../../components/SculptureCanvas'
 import WordView from '../../components/WordView'
 import CharacterView from '../../components/CharacterView'
-import ParticlePrototype from '../../components/ParticlePrototype'
 import LegendStrip from '../../components/LegendStrip'
-import { STYLE_FONT, DEFAULT_FONT } from '../../lib/palette.mjs'
+import { STYLE_FONT, DEFAULT_FONT, PALETTE_SETS } from '../../lib/palette.mjs'
 
 // Steps E + F — Scales 1, 1b, 2, 3, 4. Page owns the navigation state
 // machine:
@@ -33,12 +32,29 @@ export default function SearchPage() {
   const [selectedWord, setSelectedWord] = useState(null)
   const [wordPanel, setWordPanel] = useState('timeline')
   const [inCharacterView, setInCharacterView] = useState(false)
-  const [characterMode, setCharacterMode] = useState('histogram') // or 'particles'
-  const [particleCount, setParticleCount] = useState(100)
   const [highlightIds, setHighlightIds] = useState(null)
   const [nodesById, setNodesById] = useState(null)
   const [wordIndex, setWordIndex] = useState(null)
+  // sessionConfig — palette + RNG seed, chosen once per page load.
+  // Server renders deterministic defaults (palette[0], seed=1) so SSR
+  // and first hydration agree; the useEffect below swaps in random
+  // values once the client has mounted, which avoids the hydration-
+  // mismatch class of bugs we hit with module-level Math.random().
+  // The Marimekko corpus renderer uses `seed` to shuffle column and
+  // row order so each load reads as a different composition.
+  const [sessionConfig, setSessionConfig] = useState({
+    palette: PALETTE_SETS[0],
+    seed: 1,
+  })
+  const palette = sessionConfig.palette
   const debounceRef = useRef(null)
+
+  useEffect(() => {
+    setSessionConfig({
+      palette: PALETTE_SETS[Math.floor(Math.random() * PALETTE_SETS.length)],
+      seed: Math.floor(Math.random() * 2 ** 32),
+    })
+  }, [])
 
   // Load nodes.json + word-index.json once. nodes is needed for sentence
   // lookup (selectedId → MLT body); word-index is needed to know which
@@ -136,12 +152,6 @@ export default function SearchPage() {
     }
     // Scale 4 entry from URL — for screenshot harness and direct deep links.
     if (params.get('scale') === 'characters') setInCharacterView(true)
-    const initialMode = params.get('mode')
-    if (initialMode === 'particles' || initialMode === 'histogram') {
-      setCharacterMode(initialMode)
-    }
-    const pCount = Number(params.get('particles'))
-    if (Number.isFinite(pCount) && pCount > 0) setParticleCount(pCount)
   }, [])
 
   // Escape pops one level: characters → word → sentence → search/network.
@@ -213,25 +223,7 @@ export default function SearchPage() {
   if (inCharacterView) {
     legendScale = 'character'
     legendCenter = 'character frequency'
-    legendRight = (
-      <span style={{ display: 'inline-flex', gap: 14 }}>
-        <span
-          onClick={() => setCharacterMode('histogram')}
-          style={{
-            cursor: 'pointer',
-            color: characterMode === 'histogram' ? '#1a1a1a' : '#9a958c',
-          }}
-        >histogram</span>
-        <span style={{ color: '#9a958c' }}>·</span>
-        <span
-          onClick={() => setCharacterMode('particles')}
-          style={{
-            cursor: 'pointer',
-            color: characterMode === 'particles' ? '#1a1a1a' : '#9a958c',
-          }}
-        >particles</span>
-      </span>
-    )
+    legendRight = <span style={{ color: '#9a958c' }}>esc to exit</span>
   } else if (inWordView) {
     legendScale = 'word'
     legendCenter = `word: ${selectedWord}`
@@ -364,6 +356,7 @@ export default function SearchPage() {
           onSelectSentence={onSelectSentence}
           onPivotWord={onPivotWord}
           onSetPanel={setWordPanel}
+          palette={palette}
         />
       ) : (
         <>
@@ -375,18 +368,14 @@ export default function SearchPage() {
             onSelect={onSelectNode}
             dim={inCharacterView}
             highlightIds={inCharacterView ? highlightIds : null}
+            sessionConfig={sessionConfig}
           />
-          {inCharacterView && characterMode === 'histogram' && (
+          {inCharacterView && (
             <CharacterView
               mode="histogram"
               onHighlightIds={onHighlightIds}
             />
           )}
-          {inCharacterView && characterMode === 'particles' && (
-            <ParticlePrototype particleCount={particleCount} />
-          )}
-          {/* Scale 4 mode toggle (histogram · particles) and "scale 4"
-              status badge moved to the legend strip below. */}
         </>
       )}
 
@@ -394,6 +383,7 @@ export default function SearchPage() {
         scale={legendScale}
         centerLabel={legendCenter}
         right={legendRight}
+        palette={palette}
       />
     </>
   )

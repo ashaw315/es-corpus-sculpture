@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  STYLE_COLOR,
+  PALETTE_SETS,
   STYLE_ORDER,
   LEGEND_BG,
   LEGEND_TEXT,
@@ -32,7 +32,13 @@ export default function LegendStrip({
   scale = 'corpus',
   centerLabel = '',
   right = null,
+  // Page-owned palette state. SSR + first hydration paint pass the
+  // deterministic default so server/client agree; a useEffect on the
+  // page swaps in a random palette right after mount, which causes
+  // the swatch row to re-render with no hydration warning.
+  palette = PALETTE_SETS[0],
 }) {
+  const STYLE_COLOR = palette.colors
   return (
     <div
       role="region"
