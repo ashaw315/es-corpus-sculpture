@@ -286,12 +286,6 @@ export default function SculptureCanvas({
   selectedId = null,
   mltHits = null,
   onSelect,
-  // Step F: when `dim` is true the whole network reads as a faded
-  // backdrop; `highlightIds` (a Set of doc ids) brightens those ids to
-  // full color while others stay dim. Used by Scale 4 (character view)
-  // for cross-scale highlighting.
-  dim = false,
-  highlightIds = null,
   // Page-owned session config: { palette, seed }. Page picks random
   // values in a useEffect on first mount; we rebuild the scene whenever
   // sessionConfig changes so all mode appliers' captured colors stay
@@ -441,6 +435,13 @@ export default function SculptureCanvas({
         .style('pointer-events', 'none')
         .style('opacity', 0)
 
+      // Scale 1b bar layer — horizontal bars per search result.
+      // Owned by applyBeeswarm; hidden in every other mode. Sits
+      // above the (faded) corpus tree so bars read as the foreground.
+      const barLayer = root.append('g')
+        .attr('class', 'bars')
+        .style('opacity', 0)
+
       // (linkSel is dead from earlier iterations — kept as an empty
       // selection so beeswarm/radial code that references it still
       // returns a no-op selection rather than crashing.)
@@ -546,7 +547,7 @@ export default function SculptureCanvas({
 
       nodeSel
         .on('mouseenter', (_event, d) => {
-          if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+          if (sceneRef.current?.mode !== 'network') return
           focusNode(d.id)
           // Pause the autonomous engine and immediately fire this
           // node's tree-path activations into the hover slot. Each
@@ -556,7 +557,7 @@ export default function SculptureCanvas({
           activateNode(d.id, 'hover')
         })
         .on('mouseleave', () => {
-          if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+          if (sceneRef.current?.mode !== 'network') return
           clearNodeFocus()
           isHoveringRef.hovering = false
           extinguishSlot('hover', HOVER_FADE_OUT_MS)
@@ -680,7 +681,7 @@ export default function SculptureCanvas({
         // captured cluster geometry stays current).
         monthMerged
           .on('mouseenter', (_event, d) => {
-            if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+            if (sceneRef.current?.mode !== 'network') return
             const a = tooltipAnchor(d.x, d.y)
             showTooltip(d.monthLabel, a.x, a.y, STYLE_COLOR[d.styleMode] || DEFAULT_COLOR)
           })
@@ -690,7 +691,7 @@ export default function SculptureCanvas({
         bnodesMerged
           .style('pointer-events', 'all')
           .on('mouseenter', (_event, d) => {
-            if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+            if (sceneRef.current?.mode !== 'network') return
             const a = tooltipAnchor(d.x, d.y)
             showTooltip(d.styleMode, a.x, a.y, STYLE_COLOR[d.styleMode] || DEFAULT_COLOR)
           })
@@ -935,7 +936,6 @@ export default function SculptureCanvas({
       function autoTick() {
         if (isHoveringRef.hovering) return
         if (sceneRef.current?.mode !== 'network') return
-        if (sceneRef.current?.dim) return
         const i = Math.floor(Math.random() * simNodes.length)
         activateNode(simNodes[i].id, 'auto')
       }
@@ -1003,9 +1003,8 @@ export default function SculptureCanvas({
       // Pre-build immutable scene state.
       sceneRef.current = {
         svg, root, simulation, nodeSel, linkSel, axisLayer, arcLayer,
-        bgRect, branchLayer, chordLayer, branchNodeLayer, wedgeLayer,
+        bgRect, branchLayer, chordLayer, branchNodeLayer, wedgeLayer, barLayer,
         simNodes, nodeById, links, adjacency, W, H, mode: 'network',
-        dim: false,
         clusterInfo,
         // Set true after the first applyNetwork() to gate the on-load
         // animation — we want the entrance only on first paint, not on
@@ -1108,11 +1107,20 @@ export default function SculptureCanvas({
         chordLayer.style('opacity', 1)
         // Fade out the Step III wedge layer + clear it once gone so
         // wedge paths don't shadow click events on the cluster. Also
-        // hide the wedge HTML tooltip in case the user was hovering
-        // a wedge at the moment Scale 2 closed.
+        // hide the wedge/bar HTML tooltip in case the user was
+        // hovering one at the moment the mode closed.
         wedgeLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
           .on('end', () => wedgeLayer.selectAll('*').remove())
+        // Bars: shrink each bar's width to 0 over 400ms then clear.
+        // The layer fades alongside so the rank/sentence/date texts
+        // disappear with the rectangles.
+        barLayer.selectAll('rect.bar-fill')
+          .transition().duration(400).ease(d3.easeCubicIn)
+          .attr('width', 0)
+        barLayer.transition().duration(400).ease(d3.easeCubicIn)
+          .style('opacity', 0)
+          .on('end', () => barLayer.selectAll('*').remove())
         if (tooltipDivRef.current) tooltipDivRef.current.style.opacity = '0'
         axisLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
@@ -1124,7 +1132,19 @@ export default function SculptureCanvas({
         startAutoEngine()
       }
 
+      // Per-bar lightness variation — same idiom as the Step III
+      // wedge fills so adjacent same-style_mode bars are distinct.
+      function variedBarColor(baseHsl, idx) {
+        const m = baseHsl.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/)
+        if (!m) return baseHsl
+        const h = Number(m[1]), s = Number(m[2]), l = Number(m[3])
+        const delta = (idx % 2 === 0 ? 1 : -1) * 5
+        const newL = Math.max(15, Math.min(85, l + delta))
+        return `hsl(${h}, ${s}%, ${newL}%)`
+      }
+
       function applyBeeswarm() {
+        const prevMode = sceneRef.current.mode
         sceneRef.current.mode = 'beeswarm'
 
         clearNodeFocus()
@@ -1134,7 +1154,7 @@ export default function SculptureCanvas({
 
         // Full label reset — see resetLabelsToDefault doc.
         resetLabelsToDefault()
-        // Clear radial-only UI + cluster + chord + wedge layers on entry.
+        // Hide every other mode's geometry.
         arcLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         branchLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         chordLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
@@ -1144,93 +1164,158 @@ export default function SculptureCanvas({
           .on('end', () => wedgeLayer.selectAll('*').remove())
         if (tooltipDivRef.current) tooltipDivRef.current.style.opacity = '0'
         hideTooltip()
-        // Release ring pinning so beeswarm forces can move nodes.
-        simNodes.forEach(d => { d.fx = null; d.fy = null })
-        // Make sure nodes are visible/interactive (corpus mode left
-        // them visible too, but other modes might not).
-        nodeSel.style('opacity', 1).style('pointer-events', 'auto')
-        // Swap ground to deep; nodes opaque against black; labels light.
+        // Hide the corpus leaves entirely — bars own the canvas.
+        simNodes.forEach(d => { d.fx = d.x; d.fy = d.y })
+        nodeSel
+          .transition().duration(TRANSITION_MS / 2)
+          .style('opacity', 0)
+          .style('pointer-events', 'none')
+        axisLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        // Warm off-white ground — consistent with corpus.
         bgRect.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('fill', CANVAS_BG_DEEP)
-        nodeSel.select('circle')
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('fill-opacity', NODE_OPACITY_DEEP)
-        nodeSel.select('text.label').attr('fill', '#ddd')
+          .attr('fill', CANVAS_BG_GROUND)
 
-        const hitsArr = sceneRef.current.hits || []
-        const scoreById = new Map(hitsArr.map(h => [h.id, h.score]))
-        const hitOrder = new Map(hitsArr.map((h, i) => [h.id, i])) // 0 = top hit
-        const isHit = id => scoreById.has(id)
+        const hitsArr = (sceneRef.current.hits || []).slice(0, 12)
+        const { W: w } = sceneRef.current
+        const BAR_LEFT = 60
+        const BAR_GAP = 8
+        const BAR_HEIGHT = 52
+        const BAR_TOP = 80 // below the search input
+        const MAX_BAR_WIDTH = w * 0.8
+        const topScore = hitsArr.length ? hitsArr[0].score : 1
 
-        // Date scale across the corpus (not just the result set) so absent
-        // months still occupy x-space — keeps the timeline honest.
-        const dates = simNodes.map(d => new Date(d.date))
-        const minDate = new Date(Math.min(...dates))
-        const maxDate = new Date(Math.max(...dates))
-        const { W: w, H: h } = sceneRef.current
-        const x = d3.scaleTime()
-          .domain([minDate, maxDate])
-          .range([w * 0.08, w * 0.92])
+        // Build bar data (already score-desc from the API).
+        const bars = hitsArr.map((hit, i) => ({
+          id: hit.id,
+          rank: i + 1,
+          score: hit.score,
+          width: Math.max(8, (hit.score / topScore) * MAX_BAR_WIDTH),
+          y: BAR_TOP + i * (BAR_HEIGHT + BAR_GAP),
+          sentence: hit.sentence ?? nodeById.get(hit.id)?.sentence ?? '',
+          date: hit.date ?? nodeById.get(hit.id)?.date ?? '',
+          style_mode: hit.style_mode ?? nodeById.get(hit.id)?.style_mode ?? '',
+        }))
 
-        // Score scale uses the result set's own range.
-        const scores = hitsArr.map(h => h.score)
-        const scoreMin = scores.length ? Math.min(...scores) : 0
-        const scoreMax = scores.length ? Math.max(...scores) : 1
-        const yScale = d3.scaleLinear()
-          .domain([scoreMin, scoreMax])
-          .range([h * 0.70, h * 0.20])
-        // Non-result baseline: low band near the bottom
-        const baselineY = h * 0.92
+        // Each bar is a <g class="bar"> with rect + 3 texts (rank,
+        // sentence, date). Keyed by hit id.
+        barLayer.style('opacity', 1)
+        const barSel = barLayer.selectAll('g.bar').data(bars, d => d.id)
+        barSel.exit()
+          .transition().duration(400).ease(d3.easeCubicIn)
+          .style('opacity', 0)
+          .remove()
+        const barEnter = barSel.enter().append('g')
+          .attr('class', 'bar')
+          .style('cursor', 'pointer')
+        // Invisible hit-area rect — sits behind the visible fill,
+        // 4px taller above and below for forgiving hover. Owns the
+        // pointer-events for the whole bar so clicks/hovers register
+        // even on the rank/date text or in the gap above/below.
+        barEnter.append('rect').attr('class', 'bar-hit')
+          .attr('x', 0)
+          .attr('height', BAR_HEIGHT + 8)
+          .attr('fill', 'transparent')
+          .style('pointer-events', 'all')
+        barEnter.append('text').attr('class', 'rank')
+          .attr('x', BAR_LEFT - 12)
+          .attr('text-anchor', 'end')
+          .attr('font-family', 'monospace')
+          .attr('font-size', 11)
+          .style('pointer-events', 'none')
+        barEnter.append('rect').attr('class', 'bar-fill')
+          .attr('x', BAR_LEFT)
+          .attr('height', BAR_HEIGHT)
+          .attr('rx', 2)
+          .attr('width', 0)
+          .style('pointer-events', 'none')
+        barEnter.append('text').attr('class', 'sentence')
+          .attr('x', BAR_LEFT + 16)
+          .attr('font-family', 'monospace')
+          .attr('font-size', 13)
+          .attr('fill', '#ffffff')
+          .style('pointer-events', 'none')
+        barEnter.append('text').attr('class', 'date')
+          .attr('text-anchor', 'end')
+          .attr('font-family', 'monospace')
+          .attr('font-size', 10)
+          .style('pointer-events', 'none')
 
-        // Node sizing in beeswarm: top hit largest, then linearly shrink.
-        // Non-hits stay at small base size.
-        function targetR(d) {
-          if (!isHit(d.id)) return Math.max(6, d.baseR * 0.45)
-          const rank = hitOrder.get(d.id) // 0 = top
-          const total = hitsArr.length || 1
-          const t = rank / Math.max(1, total - 1) // 0..1
-          return d.baseR * 1.2 - t * (d.baseR * 0.7)
-        }
+        const merged = barEnter.merge(barSel)
+        merged
+          .on('mouseenter', function (_event, d) {
+            d3.select(this).select('rect.bar-fill')
+              .interrupt()
+              .transition().duration(120).ease(d3.easeCubicOut)
+              .attr('fill', variedBarColor(STYLE_COLOR[d.style_mode] || DEFAULT_COLOR, d.rank - 1 + (d.rank % 2 ? 0 : 1)))
+          })
+          .on('mouseleave', function (_event, d) {
+            d3.select(this).select('rect.bar-fill')
+              .interrupt()
+              .transition().duration(180).ease(d3.easeCubicInOut)
+              .attr('fill', variedBarColor(STYLE_COLOR[d.style_mode] || DEFAULT_COLOR, d.rank - 1))
+          })
+          .on('click', function (event, d) {
+            event.stopPropagation()
+            if (typeof onSelectRef.current === 'function') {
+              onSelectRef.current(d.id)
+            }
+          })
 
-        // Apply target r AND tween circle r in sync so collide reflects size.
-        simNodes.forEach(d => { d.r = targetR(d) })
+        // Position rows + tween bar widths.
+        merged.select('text.rank')
+          .attr('y', d => d.y + BAR_HEIGHT / 2 + 4)
+          .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
+          .text(d => d.rank)
 
-        nodeSel.select('circle')
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('r', d => d.r)
-          .attr('fill', d => isHit(d.id)
-            ? (STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-            : fadedColor(d.style_mode))
+        // Hit-area rect: spans the rank text on the left through the
+        // end of the visible bar on the right, plus 4px above/below.
+        merged.select('rect.bar-hit')
+          .attr('y', d => d.y - 4)
+          .attr('width', d => BAR_LEFT + d.width)
 
-        // Render the date axis. Recreate cleanly on each beeswarm apply.
-        const axisGen = d3.axisBottom(x)
-          .ticks(d3.timeWeek.every(1))
-          .tickFormat(d3.timeFormat('%b %d'))
-        axisLayer.attr('transform', `translate(0, ${h - 24})`)
-        axisLayer.call(axisGen)
-        axisLayer.selectAll('path').attr('stroke', '#444')
-        axisLayer.selectAll('line').attr('stroke', '#444')
-        axisLayer.selectAll('text')
-          .attr('fill', '#888')
-          .style('font-family', 'monospace')
-          .style('font-size', '10px')
-        axisLayer.transition().duration(TRANSITION_MS / 2).delay(TRANSITION_MS / 2)
-          .style('opacity', 1)
+        merged.select('rect.bar-fill')
+          .attr('y', d => d.y)
+          .attr('fill', d => variedBarColor(STYLE_COLOR[d.style_mode] || DEFAULT_COLOR, d.rank - 1))
+          .transition().duration(prevMode === 'beeswarm' ? 250 : 500)
+          .ease(d3.easeCubicOut)
+          .attr('width', d => d.width)
 
-        // Swap forces. Drop link + charge + center; install x/y target forces
-        // that pull each node to its (date, score) position.
-        // forceX/forceY strengths bumped higher than typical so the resolved
-        // positions stay within the (date, score) grid; collide alone otherwise
-        // bumps nodes past the viewport on dense-date columns.
+        // Truncate sentence text to fit the bar's pixel width.
+        merged.select('text.sentence')
+          .attr('y', d => d.y + BAR_HEIGHT / 2 + 4)
+          .each(function (d) {
+            const txt = d3.select(this)
+            // Approximate truncation: monospace 13px ≈ 7.8px per char.
+            // Bar minus left padding minus right padding (date + buffer).
+            const usable = Math.max(0, d.width - 16 - 110)
+            const maxChars = Math.max(0, Math.floor(usable / 7.8))
+            const t = d.sentence.length > maxChars
+              ? d.sentence.slice(0, Math.max(0, maxChars - 1)).trimEnd() + '…'
+              : d.sentence
+            txt.text(t)
+          })
+
+        merged.select('text.date')
+          .attr('y', d => d.y + BAR_HEIGHT / 2 + 4)
+          .attr('x', d => BAR_LEFT + d.width - 12)
+          .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
+          .style('opacity', 0.6)
+          .text(d => {
+            try {
+              const dt = new Date(d.date)
+              return d3.timeFormat('%b %d')(dt)
+            } catch { return '' }
+          })
+
+        // Park the simulation — bars are static, no forces.
         simulation
           .force('link', null)
           .force('charge', null)
           .force('center', null)
-          .force('x', d3.forceX(d => x(new Date(d.date))).strength(1))
-          .force('y', d3.forceY(d => isHit(d.id) ? yScale(scoreById.get(d.id)) : baselineY)
-            .strength(1))
-          .force('collide', d3.forceCollide(d => d.r + 2).iterations(2))
-          .alpha(1).restart()
+          .force('x', null)
+          .force('y', null)
+          .force('collide', null)
+          .alpha(0).stop()
       }
 
       // d3.arc generator — radii are viewport-responsive; per-wedge
@@ -1264,10 +1349,13 @@ export default function SculptureCanvas({
         isHoveringRef.hovering = false
         hideTooltip()
 
-        // Hide cluster + chord layers — radial owns the canvas.
+        // Hide cluster + chord + bar layers — radial owns the canvas.
         branchLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         chordLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         branchNodeLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        barLayer.transition().duration(TRANSITION_MS / 2)
+          .style('opacity', 0)
+          .on('end', () => barLayer.selectAll('*').remove())
 
         // Swap ground to deep. Hide every leaf circle — wedges and the
         // page-level center sentence overlay carry the entire scene.
@@ -1470,42 +1558,6 @@ export default function SculptureCanvas({
       scene.applyNetwork()
     }
   }, [query, hits, selectedId, mltHits, onSelect, sceneReady])
-
-  // Scale 4 backdrop: dim the corpus dots to faded variants while
-  // highlightIds (above-average letter frequency) stay vivid. Also
-  // pauses the activation engine and clears in-flight lines, so the
-  // backdrop reads as still while the histogram owns the foreground.
-  useEffect(() => {
-    const scene = sceneRef.current
-    if (!scene) return
-    const { nodeSel } = scene
-    if (!nodeSel) return
-
-    const hi = highlightIds && highlightIds.size > 0 ? highlightIds : null
-    scene.dim = dim
-
-    function pickFill(d) {
-      if (hi && hi.has(d.id)) return nodeColor(d, palette)
-      return fadedColor(d.style_mode)
-    }
-
-    if (dim) {
-      nodeSel.select('circle').transition().duration(200).attr('fill', pickFill)
-      nodeSel.style('pointer-events', 'none')
-      scene.clearNodeFocus?.()
-    } else {
-      nodeSel.style('pointer-events', 'auto')
-      // If we're toggling dim off without changing mode (i.e. user just
-      // exited Scale 4 back to corpus), restore the per-node varied fill.
-      // If a mode change is what triggered dim=false, the mode applier
-      // handles fills on its own.
-      if (scene.mode === 'network') {
-        nodeSel.select('circle')
-          .transition().duration(200)
-          .attr('fill', d => nodeColor(d, palette))
-      }
-    }
-  }, [dim, highlightIds, sceneReady])
 
   return (
     <div

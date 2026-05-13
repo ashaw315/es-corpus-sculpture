@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import SculptureCanvas from '../../components/SculptureCanvas'
 import WordView from '../../components/WordView'
 import CharacterView from '../../components/CharacterView'
@@ -32,7 +32,6 @@ export default function SearchPage() {
   const [selectedWord, setSelectedWord] = useState(null)
   const [wordPanel, setWordPanel] = useState('timeline')
   const [inCharacterView, setInCharacterView] = useState(false)
-  const [highlightIds, setHighlightIds] = useState(null)
   const [nodesById, setNodesById] = useState(null)
   const [wordIndex, setWordIndex] = useState(null)
   // sessionConfig — palette + RNG seed, chosen once per page load.
@@ -188,12 +187,6 @@ export default function SearchPage() {
     inScale1 && !query && !selectedId && !hits
   const selectedNode = selectedId ? nodesById?.get(selectedId) : null
 
-  // Wrap setHighlightIds in useCallback so the CharacterView's effect dep
-  // array doesn't see a fresh function on every render and infinite-loop.
-  const onHighlightIds = useCallback((ids) => {
-    setHighlightIds(ids ?? null)
-  }, [])
-
   // Per-word renderable spans for the center sentence (Scale 2 only).
   // Truncated to 200 chars + ellipsis so the text fits inside the
   // 240px-diameter inner void of the pie-arc radial. Splits on
@@ -257,12 +250,12 @@ export default function SearchPage() {
     legendScale = 'corpus'
     legendCenter = `${hits.length} result${hits.length === 1 ? '' : 's'}`
   } else if (inNetworkOnly) {
-    // Texture button lives here in pure network mode; relations → arrives in Step IV.
+    // Characters button lives here in pure network mode.
     legendRight = (
       <span
         style={{ cursor: 'pointer', color: '#1a1a1a' }}
         onClick={() => setInCharacterView(true)}
-      >texture →</span>
+      >characters →</span>
     )
   }
 
@@ -376,16 +369,9 @@ export default function SearchPage() {
             selectedId={inCharacterView ? null : selectedId}
             mltHits={inCharacterView ? null : mltHits}
             onSelect={onSelectNode}
-            dim={inCharacterView}
-            highlightIds={inCharacterView ? highlightIds : null}
             sessionConfig={sessionConfig}
           />
-          {inCharacterView && (
-            <CharacterView
-              mode="histogram"
-              onHighlightIds={onHighlightIds}
-            />
-          )}
+          {inCharacterView && <CharacterView />}
         </>
       )}
 
