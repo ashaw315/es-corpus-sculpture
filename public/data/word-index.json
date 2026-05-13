@@ -332,7 +332,8 @@
     "runs-84",
     "runs-86",
     "runs-88",
-    "runs-9"
+    "runs-9",
+    "runs-92"
   ],
   "ochre": [
     "runs-60",
@@ -1147,7 +1148,8 @@
     "runs-28",
     "runs-44",
     "runs-60",
-    "runs-76"
+    "runs-76",
+    "runs-92"
   ],
   "spirals": [
     "runs-76"
@@ -5569,6 +5571,12 @@
     "runs-92"
   ],
   "seat": [
+    "runs-92"
+  ],
+  "figurines": [
+    "runs-92"
+  ],
+  "positional": [
     "runs-92"
   ]
 }
