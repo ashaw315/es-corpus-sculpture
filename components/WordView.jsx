@@ -118,8 +118,21 @@ export default function WordView({
       return
     }
 
-    // x scale across the corpus's date range so different word views share
-    // the same temporal frame.
+    // Header: large dim word at the top of canvas — anchors the view
+    // even when the user has scrolled or the timeline is sparse.
+    svg.append('text')
+      .attr('class', 'word-header')
+      .attr('x', W / 2)
+      .attr('y', 56)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'monospace')
+      .attr('font-size', 24)
+      .attr('fill', '#333')
+      .style('opacity', 0.4)
+      .text(word)
+
+    // x scale across the corpus's date range so different word views
+    // share the same temporal frame.
     const allDates = data.nodes.map(n => new Date(n.date))
     const minDate = new Date(Math.min(...allDates))
     const maxDate = new Date(Math.max(...allDates))
@@ -127,70 +140,140 @@ export default function WordView({
       .domain([minDate, maxDate])
       .range([W * 0.06, W * 0.94])
 
-    // Pill geometry: width fixed, height proportional to sentence length.
+    // Pill geometry: width proportional to sentence length, height
+    // fixed at 40. Width scaled so the longest sentence fills ~26% of
+    // canvas width; minimum 120px so even short sentences hold their
+    // first-6-words label legibly.
+    const lens = containingDocs.map(d => d.length)
+    const lenMax = Math.max(...lens)
+    const widthScale = d3.scaleLinear()
+      .domain([0, Math.max(1, lenMax)])
+      .range([120, Math.max(140, W * 0.26)])
+
+    const PILL_HEIGHT = 40
+    const PILL_GAP = 6
+    const TIMELINE_BAND_TOP = 110
+    const TIMELINE_BAND_BOTTOM = H - 80 // leave room for axis + legend
+
     const pills = containingDocs.map(n => ({
       id: n.id,
       sentence: n.sentence,
       style_mode: n.style_mode,
       date: new Date(n.date),
-      width: 14,
-      height: Math.max(20, Math.min(80, n.length / 8)),
+      length: n.length,
+      width: widthScale(n.length),
+      height: PILL_HEIGHT,
       x: xScale(new Date(n.date)),
-      y: H * 0.45,
+      y: (TIMELINE_BAND_TOP + TIMELINE_BAND_BOTTOM) / 2,
     }))
 
-    // Force sim collides pills that share a date so they stack vertically.
+    // Force sim collides pills that share a date so they stack
+    // vertically. Strong x pull keeps pills anchored to their date,
+    // y pull keeps them centered in the band.
     const sim = d3.forceSimulation(pills)
       .force('x', d3.forceX(d => xScale(d.date)).strength(1))
-      .force('y', d3.forceY(H * 0.45).strength(0.18))
-      .force('collide', d3.forceCollide(d => d.width / 2 + 4).iterations(3))
+      .force('y', d3.forceY((TIMELINE_BAND_TOP + TIMELINE_BAND_BOTTOM) / 2).strength(0.18))
+      .force('collide', d3.forceCollide(d => Math.hypot(d.width / 2, d.height / 2 + PILL_GAP) * 0.6).iterations(3))
       .alphaDecay(0.05)
     simRef.current = sim
-
-    // Pre-settle so first paint shows stacked positions.
     for (let i = 0; i < 200; i++) sim.tick()
 
-    // Date axis at bottom.
+    // Date axis at bottom. Thin #ccc line, low-contrast labels.
     const axisLayer = svg.append('g')
       .attr('class', 'axis')
-      .attr('transform', `translate(0, ${H - 40})`)
+      .attr('transform', `translate(0, ${H - 56})`)
     const axisGen = d3.axisBottom(xScale)
       .ticks(d3.timeWeek.every(1))
       .tickFormat(d3.timeFormat('%b %d'))
     axisLayer.call(axisGen)
-    axisLayer.selectAll('path').attr('stroke', '#444')
-    axisLayer.selectAll('line').attr('stroke', '#444')
+    axisLayer.selectAll('path').attr('stroke', '#ccc')
+    axisLayer.selectAll('line').attr('stroke', '#ccc')
     axisLayer.selectAll('text')
       .attr('fill', '#888')
       .style('font-family', 'monospace')
-      .style('font-size', '10px')
+      .style('font-size', '9px')
 
-    // Pills.
-    const pillSel = svg.append('g').selectAll('rect')
+    // Per-pill lightness variation so adjacent same-style_mode pills
+    // are distinguishable; ±5% alternation, same idiom as Step IV bars.
+    function pillFill(d, i) {
+      const base = STYLE_COLOR[d.style_mode] || DEFAULT_COLOR
+      const m = base.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/)
+      if (!m) return base
+      const h = Number(m[1]), s = Number(m[2]), l = Number(m[3])
+      const delta = (i % 2 === 0 ? 1 : -1) * 5
+      const newL = Math.max(15, Math.min(85, l + delta))
+      return `hsl(${h}, ${s}%, ${newL}%)`
+    }
+    function pillHoverFill(d, i) {
+      const base = STYLE_COLOR[d.style_mode] || DEFAULT_COLOR
+      const m = base.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/)
+      if (!m) return base
+      const h = Number(m[1]), s = Number(m[2]), l = Number(m[3])
+      const newL = Math.min(85, l + 10)
+      return `hsl(${h}, ${s}%, ${newL}%)`
+    }
+
+    // Each pill is a <g class="pill"> with rect + sentence label +
+    // date label. Keyed by sentence id.
+    const pillG = svg.append('g').attr('class', 'pills')
+      .selectAll('g.pill')
       .data(pills, d => d.id)
-      .join('rect')
-      .attr('x', d => d.x - d.width / 2)
-      .attr('y', d => d.y - d.height / 2)
-      .attr('width', d => d.width)
-      .attr('height', d => d.height)
-      .attr('rx', 3)
-      .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-      .attr('stroke', '#000')
-      .attr('stroke-width', 1)
+      .join('g')
+      .attr('class', 'pill')
       .style('cursor', 'pointer')
-      .on('mouseenter', (_, d) => setHoverPillId(d.id))
-      .on('mouseleave', () => setHoverPillId(null))
-      .on('click', (_, d) => {
+      .on('mouseenter', function (_event, d) {
+        const i = pills.indexOf(d)
+        d3.select(this).select('rect.pill-fill').attr('fill', pillHoverFill(d, i))
+        setHoverPillId(d.id)
+      })
+      .on('mouseleave', function (_event, d) {
+        const i = pills.indexOf(d)
+        d3.select(this).select('rect.pill-fill').attr('fill', pillFill(d, i))
+        setHoverPillId(null)
+      })
+      .on('click', (_event, d) => {
         if (typeof onSelectSentence === 'function') onSelectSentence(d.id)
       })
 
-    // Re-position pills on every tick during settle (already pre-settled,
-    // but keep the sim live so resize can re-balance).
+    pillG.append('rect')
+      .attr('class', 'pill-fill')
+      .attr('rx', 4)
+      .attr('width', d => d.width)
+      .attr('height', d => d.height)
+      .attr('fill', (d, i) => pillFill(d, i))
+
+    pillG.append('text')
+      .attr('class', 'pill-label')
+      .attr('font-family', 'monospace')
+      .attr('font-size', 11)
+      .attr('fill', '#fff')
+      .attr('x', 10)
+      .attr('y', d => d.height / 2 + 4)
+      .style('pointer-events', 'none')
+      .text(d => firstWords(d.sentence, 6))
+
+    pillG.append('text')
+      .attr('class', 'pill-date')
+      .attr('font-family', 'monospace')
+      .attr('font-size', 9)
+      .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
+      .style('opacity', 0.6)
+      .attr('x', 10)
+      .attr('y', d => d.height + 12)
+      .style('pointer-events', 'none')
+      .text(d => d3.timeFormat('%b %d')(d.date))
+
+    // Re-position pills on every tick (sim is pre-settled but live for
+    // the first few frames).
     sim.on('tick', () => {
-      pillSel
-        .attr('x', d => d.x - d.width / 2)
-        .attr('y', d => d.y - d.height / 2)
+      pillG.attr('transform', d => `translate(${d.x - d.width / 2}, ${d.y - d.height / 2})`)
     })
+  }
+
+  // Truncate sentence to first n whitespace-separated tokens.
+  function firstWords(sentence, n) {
+    if (!sentence) return ''
+    return sentence.split(/\s+/).slice(0, n).join(' ')
   }
 
   function renderCooccurrence(svg, W, H) {
@@ -269,7 +352,7 @@ export default function WordView({
       .join('line')
       .attr('x1', cx).attr('y1', cy)
       .attr('x2', d => d.x).attr('y2', d => d.y)
-      .attr('stroke', '#333')
+      .attr('stroke', '#bbb')
       .attr('stroke-width', 0.6)
 
     // Labels.
@@ -282,7 +365,7 @@ export default function WordView({
       .attr('font-family', 'monospace')
       .attr('font-size', d => d.fontSize)
       .attr('fill', d =>
-        d.isCenter ? '#fff' : colorForWord(d.word, d.freq))
+        d.isCenter ? '#1a1a1a' : colorForWord(d.word, d.freq))
       .style('cursor', d => d.isCenter ? 'default' : 'pointer')
       .text(d => d.word)
       .on('click', (_, d) => {
@@ -306,7 +389,7 @@ export default function WordView({
     <div
       ref={wrapperRef}
       style={{
-        position: 'fixed', inset: 0, background: '#000', overflow: 'hidden',
+        position: 'fixed', inset: 0, background: '#f5f2ed', overflow: 'hidden',
       }}
     >
       <svg ref={svgRef} style={{ display: 'block' }} />
@@ -314,19 +397,21 @@ export default function WordView({
       {/* Panel toggle moved to the bottom legend strip in Step I.
           See <LegendStrip> in app/search/page.jsx. */}
 
-      {/* Hover tooltip for Panel A */}
+      {/* Hover tooltip for Panel A — small monospace card near the
+          top of the canvas (below the word header), light-on-light
+          friendly with a thin colored border per style_mode. */}
       {hoverDoc && (
         <div style={{
           position: 'absolute',
-          top: 80, left: '50%', transform: 'translateX(-50%)',
-          maxWidth: 760, padding: '10px 14px',
-          background: 'rgba(20,20,20,0.92)', color: '#ddd',
-          fontFamily: 'monospace', fontSize: 13, lineHeight: 1.45,
-          border: `1px solid ${STYLE_COLOR[hoverDoc.style_mode] || '#444'}`,
+          top: 92, left: '50%', transform: 'translateX(-50%)',
+          maxWidth: 760, padding: '8px 12px',
+          background: 'rgba(255,255,255,0.92)', color: '#1a1a1a',
+          fontFamily: 'monospace', fontSize: 11, lineHeight: 1.45,
+          border: `1px solid ${STYLE_COLOR[hoverDoc.style_mode] || '#888'}`,
           borderRadius: 4,
           pointerEvents: 'none',
         }}>
-          <div style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>
+          <div style={{ fontSize: 9, color: '#888', marginBottom: 3 }}>
             {hoverDoc.id} · {hoverDoc.style_mode} · {hoverDoc.date}
           </div>
           {hoverDoc.sentence}
