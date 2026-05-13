@@ -332,18 +332,30 @@ export default function SearchPage() {
                 : (
                   <span
                     key={idx}
+                    className={part.clickable ? 'pivot-word' : undefined}
                     onClick={() => part.clickable && onPivotWord(part.key)}
                     style={{
                       cursor: part.clickable ? 'pointer' : 'default',
                       pointerEvents: part.clickable ? 'auto' : 'none',
-                      borderBottom: part.clickable
-                        ? '1px dotted rgba(255,255,255,0.18)'
-                        : 'none',
                     }}
                   >{part.display}</span>
                 )
             )}
           </div>
+          {/* Inline style: faint dotted underline on clickable words,
+              brighter solid underline + slight white shift on hover.
+              Inline React style can't address :hover; a <style> tag
+              keeps it local without pulling in a CSS module. */}
+          <style>{`
+            .pivot-word {
+              border-bottom: 1px dotted rgba(255,255,255,0.18);
+              transition: color 120ms ease, border-color 120ms ease;
+            }
+            .pivot-word:hover {
+              color: #fff;
+              border-bottom: 1px solid rgba(255,255,255,0.85);
+            }
+          `}</style>
         </div>
       )}
 
