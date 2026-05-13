@@ -167,16 +167,34 @@ export default function WordView({
       y: (TIMELINE_BAND_TOP + TIMELINE_BAND_BOTTOM) / 2,
     }))
 
+    // Pill bounds — clamp x and y so the rect (and its date label)
+    // stay inside the viewport even when the date sits at the very
+    // start of the corpus range and the pill is wide. Date label
+    // hangs ~14px below the pill bottom.
+    const PILL_LEFT_MARGIN = 16
+    const PILL_RIGHT_MARGIN = 16
+    function clampPillPositions() {
+      for (const p of pills) {
+        const halfW = p.width / 2
+        const halfH = p.height / 2
+        p.x = Math.max(halfW + PILL_LEFT_MARGIN, Math.min(W - halfW - PILL_RIGHT_MARGIN, p.x))
+        p.y = Math.max(TIMELINE_BAND_TOP + halfH, Math.min(TIMELINE_BAND_BOTTOM - halfH - 14, p.y))
+      }
+    }
+
     // Force sim collides pills that share a date so they stack
     // vertically. Strong x pull keeps pills anchored to their date,
-    // y pull keeps them centered in the band.
+    // y pull keeps them centered in the band. A custom force runs
+    // last each tick to clamp pill positions inside the viewport.
     const sim = d3.forceSimulation(pills)
       .force('x', d3.forceX(d => xScale(d.date)).strength(1))
       .force('y', d3.forceY((TIMELINE_BAND_TOP + TIMELINE_BAND_BOTTOM) / 2).strength(0.18))
       .force('collide', d3.forceCollide(d => Math.hypot(d.width / 2, d.height / 2 + PILL_GAP) * 0.6).iterations(3))
+      .force('clamp', clampPillPositions)
       .alphaDecay(0.05)
     simRef.current = sim
     for (let i = 0; i < 200; i++) sim.tick()
+    clampPillPositions()
 
     // Date axis at bottom. Thin #ccc line, low-contrast labels.
     const axisLayer = svg.append('g')
