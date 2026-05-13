@@ -1058,9 +1058,12 @@ export default function SculptureCanvas({
         svg.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
           .call(zoom.transform, d3.zoomIdentity)
 
-        // Full label reset — see resetLabelsToDefault doc.
+        // Full label reset — see resetLabelsToDefault doc. Also
+        // clear hover state so a stale hover from a prior mode
+        // doesn't prevent the autonomous engine from firing.
         resetLabelsToDefault()
         clearNodeFocus()
+        isHoveringRef.hovering = false
 
         // Rebuild the cluster against the current viewport — beeswarm/
         // radial overwrite n.x/y/fx/fy with their own targets, so reset
@@ -1099,8 +1102,13 @@ export default function SculptureCanvas({
           .attr('fill', d => nodeColor(d, palette))
           .attr('fill-opacity', NODE_OPACITY_CORPUS)
         nodeSel.select('text.label').attr('fill', '#1a1a1a')
+        // Re-show leaves: beeswarm/radial both faded nodeSel to
+        // opacity 0; without an explicit opacity:1 here the cluster
+        // tree's outer-ring leaves stay invisible after a
+        // search-then-clear or a radial-then-escape.
         nodeSel
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .transition().duration(400).ease(d3.easeCubicInOut)
+          .style('opacity', 1)
           .style('pointer-events', 'auto')
         branchLayer.transition().duration(TRANSITION_MS).style('opacity', 1)
         branchNodeLayer.transition().duration(TRANSITION_MS).style('opacity', 1)
@@ -1112,13 +1120,10 @@ export default function SculptureCanvas({
         wedgeLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
           .on('end', () => wedgeLayer.selectAll('*').remove())
-        // Bars: shrink each bar's width to 0 over 400ms then clear.
-        // The layer fades alongside so the rank/sentence/date texts
-        // disappear with the rectangles.
-        barLayer.selectAll('rect.bar-fill')
-          .transition().duration(400).ease(d3.easeCubicIn)
-          .attr('width', 0)
-        barLayer.transition().duration(400).ease(d3.easeCubicIn)
+        // Bars: opacity 0 over 300ms, then clear the layer. No
+        // width-tween — keeping the change to a single property keeps
+        // d3 from cancelling overlapping transitions.
+        barLayer.transition().duration(300).ease(d3.easeCubicIn)
           .style('opacity', 0)
           .on('end', () => barLayer.selectAll('*').remove())
         if (tooltipDivRef.current) tooltipDivRef.current.style.opacity = '0'

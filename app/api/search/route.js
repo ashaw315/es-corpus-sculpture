@@ -24,13 +24,26 @@ export async function GET(request) {
       size: 12,
       query: {
         bool: {
+          // must: fuzzy multi_match against sentence + title.
+          // prefix_length:0 lets fuzziness apply from the very first
+          // character so "test" still matches "testing"/"tests" even
+          // when the analyzer tokenization wouldn't otherwise hit.
           must: {
             multi_match: {
               query: q,
               fields: ['sentence', 'title'],
               fuzziness: 'AUTO',
+              prefix_length: 0,
             },
           },
+          // should: any term in the sentence that starts with the
+          // query string. Catches mid-typing prefixes that the fuzzy
+          // multi_match misses (e.g. "test" not finding a sentence
+          // that has "testify" if no other token loosely matches).
+          should: [
+            { prefix: { sentence: q.toLowerCase() } },
+          ],
+          minimum_should_match: 0,
           ...(style_mode ? { filter: [{ term: { style_mode } }] } : {}),
         },
       },
