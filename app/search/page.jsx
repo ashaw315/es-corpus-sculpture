@@ -305,27 +305,27 @@ export default function SearchPage() {
       </div>
 
       {/* Center-sentence HTML overlay — Scale 2 only. Per-word clickable
-          spans drive Scale 3 entry. The overlay is hard-clipped to a
-          230px circle (matching the pie-arc inner radius of 120 minus
-          a small padding) so long sentences can't bleed onto the
-          wedges. Text shrinks to 14px and truncates at 200 chars. */}
+          spans drive Scale 3 entry. Sized to the inner-circle diameter
+          (240px) with 16px padding and overflow:hidden so even a long
+          sentence (truncated to 200 chars upstream) can't bleed onto
+          the surrounding wedges. */}
       {inRadial && centerWordSpans && (
         <div
           style={{
             position: 'fixed',
             top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 230, height: 230,
+            width: 240, height: 240,
             borderRadius: '50%',
             overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             textAlign: 'center',
-            color: '#eee',
-            fontSize: 14,
-            lineHeight: 1.35,
-            fontFamily: centerTreatment.family,
-            fontStyle: centerTreatment.style,
-            padding: '0 12px',
+            color: '#fff',
+            fontSize: 13,
+            lineHeight: 1.4,
+            fontFamily: 'Georgia, serif',
+            fontStyle: 'italic',
+            padding: 16,
             boxSizing: 'border-box',
             pointerEvents: 'none', // wrapper passive; spans opt-in
             zIndex: 5,

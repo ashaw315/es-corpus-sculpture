@@ -44,13 +44,12 @@ const TRANSITION_MS = 800
 const CELL_FADE_MS = 400
 
 // Radial-mode geometry. Step III replaces the old line+circle layout
-// with d3.pie + d3.arc wedges. innerRadius is the void containing the
-// center sentence overlay (rendered by app/search/page.jsx). The two
-// outerRadius rings give an "exploded" feel — top 3 MLT neighbors get
-// the inner ring (outerR=260), next 4 get the outer ring (outerR=360).
+// with d3.pie + d3.arc wedges. innerRadius is the fixed void
+// containing the center sentence overlay (240px circle, rendered by
+// app/search/page.jsx). The two outer rings are computed per-viewport
+// in applyRadial: outerOuter = 75% of (min(W, H-48) / 2), innerOuter
+// = 72% of outerOuter, giving the exploded inner-vs-outer ring feel.
 const WEDGE_INNER_R = 120
-const WEDGE_INNER_OUTER_R = 260
-const WEDGE_OUTER_OUTER_R = 360
 const WEDGE_HOVER_LIFT = 20
 const WEDGE_PAD_ANGLE = 0.02
 // (Center sentence font size lives in the page overlay.)
@@ -311,6 +310,7 @@ export default function SculptureCanvas({
 
   const svgRef = useRef(null)
   const wrapperRef = useRef(null)
+  const tooltipDivRef = useRef(null)
   const [error, setError] = useState(null)
 
   // Stable refs into the live scene so prop-change effects can mutate the
@@ -1107,10 +1107,13 @@ export default function SculptureCanvas({
         branchNodeLayer.transition().duration(TRANSITION_MS).style('opacity', 1)
         chordLayer.style('opacity', 1)
         // Fade out the Step III wedge layer + clear it once gone so
-        // wedge paths don't shadow click events on the cluster.
+        // wedge paths don't shadow click events on the cluster. Also
+        // hide the wedge HTML tooltip in case the user was hovering
+        // a wedge at the moment Scale 2 closed.
         wedgeLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
           .on('end', () => wedgeLayer.selectAll('*').remove())
+        if (tooltipDivRef.current) tooltipDivRef.current.style.opacity = '0'
         axisLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
         arcLayer.transition().duration(TRANSITION_MS / 2)
@@ -1139,6 +1142,7 @@ export default function SculptureCanvas({
         wedgeLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
           .on('end', () => wedgeLayer.selectAll('*').remove())
+        if (tooltipDivRef.current) tooltipDivRef.current.style.opacity = '0'
         hideTooltip()
         // Release ring pinning so beeswarm forces can move nodes.
         simNodes.forEach(d => { d.fx = null; d.fy = null })
@@ -1229,15 +1233,12 @@ export default function SculptureCanvas({
           .alpha(1).restart()
       }
 
-      // d3.arc generator — outerRadius depends on the wedge's rank
-      // (top 3 → inner ring at 260, next 4 → outer ring at 360).
-      // Hover bumps outer +20 via the `hover` flag on the datum.
+      // d3.arc generator — radii are viewport-responsive; per-wedge
+      // baseOuter is read from datum (computed in applyRadial against
+      // the current viewport), hover bumps it +WEDGE_HOVER_LIFT.
       const wedgeArc = d3.arc()
         .innerRadius(WEDGE_INNER_R)
-        .outerRadius(d => {
-          const base = d.data.rank < 3 ? WEDGE_INNER_OUTER_R : WEDGE_OUTER_OUTER_R
-          return base + (d.data.hovered ? WEDGE_HOVER_LIFT : 0)
-        })
+        .outerRadius(d => d.data.baseOuter + (d.data.hovered ? WEDGE_HOVER_LIFT : 0))
         .padAngle(WEDGE_PAD_ANGLE)
         .cornerRadius(0)
 
@@ -1288,18 +1289,44 @@ export default function SculptureCanvas({
         const cy = (h - 48) / 2
         wedgeLayer.attr('transform', `translate(${cx}, ${cy})`)
 
+        // Viewport-responsive radii. The outer ring fills ~75% of the
+        // shorter viewport dimension; the inner ring sits at ~72% of
+        // the outer so the two-tone depth reads. innerRadius is fixed
+        // (matches the 240px center-text overlay).
+        const halfMin = Math.min(w, h - 48) / 2
+        const outerOuter = Math.max(180, halfMin * 0.75)
+        const innerOuter = outerOuter * 0.72
+
+        // ±10% lightness variation per wedge: even index lighter,
+        // odd index darker. Same hue family so within-style_mode
+        // monochrome groups still read as distinct segments.
+        function variedColor(baseHsl, idx) {
+          const m = baseHsl.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/)
+          if (!m) return baseHsl
+          const h = Number(m[1]), s = Number(m[2]), l = Number(m[3])
+          const delta = (idx % 2 === 0 ? 1 : -1) * 10
+          const newL = Math.max(15, Math.min(85, l + delta))
+          return `hsl(${h}, ${s}%, ${newL}%)`
+        }
+
         // Build wedge data — top 7 MLT neighbors that exist in our
-        // corpus. rank carries the inner/outer ring assignment.
+        // corpus. rank carries the inner/outer ring assignment;
+        // baseOuter is the wedge's resting outer radius (read by the
+        // arc generator); fillOpacity drops to 0.7 on the outer ring
+        // for the two-tone depth.
         const top7 = (mltHits || []).slice(0, 7).filter(h => nodeById.has(h.id))
         const wedgeData = top7.map((hit, i) => {
           const neighbor = nodeById.get(hit.id)
+          const baseColor = STYLE_COLOR[neighbor.style_mode] || DEFAULT_COLOR
           return {
             id: hit.id,
             rank: i,
             score: hit.score,
             sentence: neighbor.sentence,
             style_mode: neighbor.style_mode,
-            color: STYLE_COLOR[neighbor.style_mode] || DEFAULT_COLOR,
+            color: variedColor(baseColor, i),
+            baseOuter: i < 3 ? innerOuter : outerOuter,
+            fillOpacity: i < 3 ? 1 : 0.7,
             hovered: false,
           }
         })
@@ -1319,6 +1346,7 @@ export default function SculptureCanvas({
           .style('pointer-events', 'all')
         const wedgeMerged = wedgeEnter.merge(wedgeSel)
           .attr('fill', d => d.data.color)
+          .attr('fill-opacity', d => d.data.fillOpacity)
         // Tween between previous d (if any) and the new one for smooth
         // arc transitions when click → new center re-fires applyRadial.
         wedgeMerged
@@ -1364,48 +1392,29 @@ export default function SculptureCanvas({
             }
           })
 
-        // Wedge hover label — first 6 words at the wedge's outer
-        // edge midpoint (outerRadius + 12px) along the mid-angle,
-        // rotated to follow the arc tangent. Bottom half (midangle
-        // in (π/2, 3π/2)) is flipped 180° so text never reads
-        // upside-down. One shared text element so it can't double-render.
-        let wedgeLabel = wedgeLayer.select('text.wedge-label')
-        if (wedgeLabel.empty()) {
-          wedgeLabel = wedgeLayer.append('text')
-            .attr('class', 'wedge-label')
-            .attr('font-family', 'monospace')
-            .attr('font-size', 11)
-            .attr('fill', '#ffffff')
-            .attr('text-anchor', 'middle')
-            .attr('dy', '0.32em')
-            .style('pointer-events', 'none')
-            .style('opacity', 0)
-        }
+        // Wedge hover tooltip — HTML overlay populated imperatively
+        // (top-left below the search input). Same idiom as the word
+        // view's hover label. The previous SVG arc-following label
+        // is gone; a single fixed-position tooltip is much easier to
+        // read and never collides with other wedges.
         function showWedgeLabel(d) {
-          // d3.pie midangle: radians from 12 o'clock, clockwise.
-          const mid = (d.startAngle + d.endAngle) / 2
-          const baseOuter = d.data.rank < 3 ? WEDGE_INNER_OUTER_R : WEDGE_OUTER_OUTER_R
-          // Position 12px outboard of the wedge's resting outer edge
-          // (don't use the +HOVER_LIFT here — the label hugs the
-          // baseline arc, not the lifted hover edge, so wedge tween
-          // and label position don't fight each other).
-          const r = baseOuter + 12
-          const x = Math.sin(mid) * r
-          const y = -Math.cos(mid) * r
-          // Tangent rotation. SVG rotate(0) faces right; tangent at
-          // angle mid (from 12 o'clock CW) points in direction
-          // (mid * 180/π - 90)°. Standard D3 radial-label flip: on
-          // the left half of the circle (mid > π) add 180° so text
-          // reads left-to-right instead of upside-down.
-          let rotDeg = mid * 180 / Math.PI - 90
-          if (mid > Math.PI) rotDeg += 180
-          wedgeLabel
-            .attr('transform', `translate(${x},${y}) rotate(${rotDeg})`)
-            .text(firstWords(d.data.sentence, 6))
-            .style('opacity', 0.9)
+          const div = tooltipDivRef.current
+          if (!div) return
+          div.innerHTML = ''
+          const sentenceLine = document.createElement('div')
+          sentenceLine.textContent = firstWords(d.data.sentence, 8)
+          const styleLine = document.createElement('div')
+          styleLine.textContent = d.data.style_mode
+          styleLine.style.opacity = '0.55'
+          styleLine.style.marginTop = '2px'
+          div.appendChild(sentenceLine)
+          div.appendChild(styleLine)
+          div.style.opacity = '1'
         }
         function hideWedgeLabel() {
-          wedgeLabel.style('opacity', 0)
+          const div = tooltipDivRef.current
+          if (!div) return
+          div.style.opacity = '0'
         }
 
         // Reveal the wedge layer (no-op if already visible from prior
@@ -1512,6 +1521,27 @@ export default function SculptureCanvas({
         </div>
       )}
       <svg ref={svgRef} style={{ display: 'block' }} />
+      {/* Wedge hover tooltip — Scale 2 only. Imperatively populated
+          by SculptureCanvas wedge mouseenter/leave (see applyRadial).
+          Sits in top-left below the search input; same idiom as the
+          word view's hover label. */}
+      <div
+        ref={tooltipDivRef}
+        style={{
+          position: 'fixed',
+          top: 56, left: 16,
+          maxWidth: 360,
+          padding: '4px 0',
+          fontFamily: 'monospace',
+          fontSize: 11,
+          color: '#fff',
+          lineHeight: 1.45,
+          pointerEvents: 'none',
+          opacity: 0,
+          transition: 'opacity 120ms ease-out',
+          zIndex: 20,
+        }}
+      />
     </div>
   )
 }
