@@ -6,9 +6,24 @@ import {
   PALETTE_SETS,
   DEFAULT_COLOR,
   fadedColorFor,
+  nodeColor,
   STYLE_FONT,
   DEFAULT_FONT,
 } from '../lib/palette.mjs'
+
+// Corpus-mode background — warm off-white "ground" per v2 spec. Swaps to
+// CANVAS_BG_DEEP when entering beeswarm/radial; swaps back on return.
+const CANVAS_BG_GROUND = '#f5f2ed'
+const CANVAS_BG_DEEP = '#000000'
+const NODE_OPACITY_CORPUS = 0.85
+const NODE_OPACITY_DEEP = 1.0
+// Uniform leaf-circle radius in corpus mode — the radial cluster reads
+// as a tree of relationships, not a chart of sentence lengths.
+const LEAF_R = 5
+// Inner branch nodes (style_mode hubs + month nodes).
+const BRANCH_R = 5
+// Root-node circle at canvas center.
+const ROOT_R = 4
 // Scales 1, 1b, and 2 — animated corpus dots, beeswarm search, radial arc.
 // Mode priority: selectedId set → radial; else query+hits → beeswarm; else network.
 // Loads precomputed /public/data/{nodes,graph}.json once and shares the
@@ -62,8 +77,203 @@ function firstWords(sentence, n = 4) {
   return sentence.split(/\s+/).slice(0, n).join(' ')
 }
 
-function nodeRadius(length) {
-  return 5 + Math.sqrt(length) * 0.8
+// Linear length → leaf-circle radius mapping per radial-cluster spec.
+// Shortest sentence → 6px, longest → 24px. Smaller ceiling than earlier
+// versions because the cluster ring spaces leaves out evenly; we don't
+// need the painting-reference 40-48px extremes.
+function nodeRadius(length, lenMin, lenMax) {
+  if (lenMax === lenMin) return 15
+  const t = (length - lenMin) / (lenMax - lenMin)
+  return 6 + Math.max(0, Math.min(1, t)) * 18
+}
+
+// Radial cluster layout via d3.cluster() on a two-level hierarchy:
+//   root → style_mode branches (5) → individual sentences (leaves)
+// Groups are sorted largest-first; leaves within a group are sorted by
+// date ascending. Returns the geometry needed by the renderer:
+// projected positions for branches and leaves, the link list, the ring
+// radius, and the center coordinates. simNodes are mutated in place so
+// hover/click can read d.x/d.y/d.angle from the same object the
+// activation engine activates.
+function buildClusterLayout(simNodes, W, H, Rmax) {
+  const cx = W / 2
+  const cy = (H - 48) / 2
+  // No permanent text labels — the tree fills 84% of the viewport
+  // (radius = 0.42 * min(W, H-48)) with the remaining ~8% on each
+  // side as breathing room. Rmax kept as an override for callers
+  // that still want a bbox-fit pass; default takes the spec'd ratio.
+  const halfMin = Math.min(W, H - 48) / 2
+  const initialR = Math.max(60, halfMin * 0.84)
+  const R = typeof Rmax === 'number' ? Math.max(60, Rmax) : initialR
+
+  // Group leaves by style_mode and sort within-group by date asc.
+  const groups = new Map()
+  for (const n of simNodes) {
+    if (!groups.has(n.style_mode)) groups.set(n.style_mode, [])
+    groups.get(n.style_mode).push(n)
+  }
+  for (const arr of groups.values()) {
+    arr.sort((a, b) => new Date(a.date) - new Date(b.date))
+  }
+
+  // Stable group order: largest group first, ties broken alpha.
+  const groupArr = [...groups.entries()].sort((a, b) => {
+    const c = b[1].length - a[1].length
+    return c !== 0 ? c : a[0].localeCompare(b[0])
+  })
+
+  // Build the hierarchy for d3.cluster() with an optional middle
+  // level: months. Within each style_mode, walk the date-sorted
+  // leaves and bucket consecutive same-month leaves; if a bucket has
+  // ≥3 sentences emit a month node, otherwise inline its leaves
+  // directly under the style_mode (keeps the tree clean for sparse
+  // months). Month label is the abbreviated name (Jan/Feb/Mar/...).
+  const MONTH_THRESHOLD = 3
+  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  function monthKey(date) {
+    const d = new Date(date)
+    return `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`
+  }
+  function monthLabel(date) {
+    return MONTH_ABBR[new Date(date).getMonth()]
+  }
+
+  function buildStyleChildren(styleMode, nodes) {
+    // nodes is already sorted by date asc — bucket consecutive
+    // same-month entries.
+    const buckets = []
+    for (const n of nodes) {
+      const k = monthKey(n.date)
+      const last = buckets[buckets.length - 1]
+      if (last && last.key === k) last.nodes.push(n)
+      else buckets.push({ key: k, nodes: [n], styleMode })
+    }
+    const children = []
+    for (const b of buckets) {
+      if (b.nodes.length >= MONTH_THRESHOLD) {
+        children.push({
+          name: `${styleMode}|${b.key}`,
+          isMonth: true,
+          styleMode,
+          monthLabel: monthLabel(b.nodes[0].date),
+          children: b.nodes.map(node => ({ name: node.id, styleMode, node })),
+        })
+      } else {
+        for (const node of b.nodes) {
+          children.push({ name: node.id, styleMode, node })
+        }
+      }
+    }
+    return children
+  }
+
+  const rootData = {
+    name: '__root',
+    children: groupArr.map(([styleMode, nodes]) => ({
+      name: styleMode,
+      styleMode,
+      children: buildStyleChildren(styleMode, nodes),
+    })),
+  }
+
+  // d3.cluster() in [0, 2π] × [0, R] — first coord is angle, second
+  // radius. Internal nodes land at proportional radii based on their
+  // depth; we then override depth-1 (style_mode) and depth-2 (month)
+  // anchors below to sit at fixed mid-rings.
+  const rootH = d3.hierarchy(rootData)
+  const cluster = d3.cluster().size([2 * Math.PI, R])
+  cluster(rootH)
+
+  // Project each hierarchy node into Cartesian space, anchored at (cx, cy).
+  // d.x is the angle (radians, 0 = down per d3.cluster convention).
+  // We rotate -π/2 so 0 reads as "top" — matches user expectation that
+  // group 0 starts at the top of the canvas.
+  function project(d) {
+    const angle = d.x - Math.PI / 2
+    return [cx + Math.cos(angle) * d.y, cy + Math.sin(angle) * d.y]
+  }
+
+  // Override radii so the three internal layers land on stable rings:
+  //   depth 1 (style_mode hubs):  R * 0.40
+  //   depth 2 (month nodes):      R * 0.72
+  //   depth 3+ (sentence leaves): R   (outer)
+  // Sentence leaves can also live at depth 2 (sparse months that didn't
+  // earn an intermediate); those still ride the outer ring.
+  rootH.each(node => {
+    if (node.depth === 1) node.y = R * 0.40
+    else if (node.depth === 2) {
+      if (node.data.isMonth) node.y = R * 0.72
+      else node.y = R
+    } else if (node.depth === 3) node.y = R
+  })
+
+  // Inner branch nodes (depth=1): style_mode anchors.
+  const branches = rootH.children.map(child => {
+    const [px, py] = project(child)
+    return {
+      styleMode: child.data.styleMode,
+      count: child.descendants().filter(d => d.data.node).length,
+      x: px, y: py,
+      angle: (child.x - Math.PI / 2) * 180 / Math.PI,
+      hNode: child,
+    }
+  })
+
+  // Month nodes (depth=2, isMonth=true): the optional date subdivision.
+  const months = []
+  for (const groupNode of rootH.children) {
+    for (const child of groupNode.children) {
+      if (child.data.isMonth) {
+        const [px, py] = project(child)
+        months.push({
+          styleMode: child.data.styleMode,
+          monthLabel: child.data.monthLabel,
+          x: px, y: py,
+          angle: (child.x - Math.PI / 2) * 180 / Math.PI,
+          hNode: child,
+        })
+      }
+    }
+  }
+
+  // Leaves (depth=2 or 3 — wherever a node has a `node` ref). Write
+  // x/y/angle back onto the simNode so click/hover code that reads
+  // d.x/d.y picks up the ring position.
+  const leaves = []
+  rootH.each(h => {
+    if (!h.data.node) return
+    const [px, py] = project(h)
+    const sim = h.data.node
+    sim.x = px
+    sim.y = py
+    sim.fx = px
+    sim.fy = py
+    sim.angle = (h.x - Math.PI / 2) * 180 / Math.PI
+    leaves.push({
+      node: sim,
+      x: px, y: py,
+      angle: sim.angle,
+      hNode: h,
+    })
+  })
+
+  // All hierarchy edges from rootH.links() — both depths. Inner edges
+  // (root → styleMode) curve from the center to the inner-ring anchor;
+  // outer edges (styleMode → leaf) curve from the anchor to the leaf.
+  // Coloring is driven by the deeper end's style_mode, so an inner
+  // edge inherits its branch's color and an outer edge inherits its
+  // group's color — the whole sub-tree reads as one color family.
+  const allLinks = rootH.links().map(link => ({
+    source: link.source,
+    target: link.target,
+    depth: link.target.depth,
+    styleMode:
+      link.target.data.styleMode ??
+      link.source.data.styleMode ??
+      null,
+  }))
+
+  return { cx, cy, R, branches, months, leaves, allLinks, rootH }
 }
 
 export default function SculptureCanvas({
@@ -128,10 +338,18 @@ export default function SculptureCanvas({
       if (cancelled) return
 
       const links = dedupeEdges(graph)
+      const lens = nodes.map(n => n.length)
+      const lenMin = Math.min(...lens)
+      const lenMax = Math.max(...lens)
+      // Corpus-mode leaf radius is uniform (LEAF_R, set on every node's
+      // `r`). baseR keeps the length-scaled value because beeswarm's
+      // sizing logic reads it — when the search view picks up, top hits
+      // grow and non-hits shrink relative to baseR. In corpus mode r is
+      // overwritten back to LEAF_R by applyNetwork.
       const simNodes = nodes.map(n => ({
         ...n,
-        baseR: nodeRadius(n.length),
-        r: nodeRadius(n.length),
+        baseR: nodeRadius(n.length, lenMin, lenMax),
+        r: LEAF_R,
       }))
       const nodeById = new Map(simNodes.map(n => [n.id, n]))
 
@@ -154,6 +372,17 @@ export default function SculptureCanvas({
         .attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
       svg.selectAll('*').remove()
 
+      // Full-canvas ground rect, painted under the zoom root. Sits outside
+      // the zoom group so panning/zooming doesn't reveal the page color
+      // behind it. The fill tweens between CANVAS_BG_GROUND (corpus) and
+      // CANVAS_BG_DEEP (beeswarm/radial) via the mode appliers.
+      const bgRect = svg.append('rect')
+        .attr('class', 'canvas-bg')
+        .attr('x', 0).attr('y', 0)
+        .attr('width', W).attr('height', H)
+        .attr('fill', CANVAS_BG_GROUND)
+        .style('pointer-events', 'none')
+
       const root = svg.append('g').attr('class', 'zoom-root')
 
       // x-axis layer for beeswarm; hidden in network mode via opacity.
@@ -167,12 +396,36 @@ export default function SculptureCanvas({
         .attr('class', 'arcs')
         .style('opacity', 0)
 
-      // Line layer — one <line> per active activation, painted under
-      // nodes. Lines are appended dynamically by the animation engine
-      // and self-remove via a transition .on('end') handler.
-      const lineLayer = root.append('g')
-        .attr('class', 'activation-lines')
+      // <defs> for per-edge linearGradients used by the chord layer.
+      // Sits at SVG root (outside the zoom/pan transform) so gradients
+      // are addressable by URL from any layer.
+      const defs = svg.append('defs')
+
+      // Cluster tree layers — corpus mode only. Z-order matters:
+      // Branches paint first, then activation strokes, then internal
+      // dots (root, hubs, months), then leaves. No permanent text:
+      // hover routes through tooltipText (appended later, outside
+      // the zoom-root so it never gets clipped).
+      //   branchLayer       — <path> per hierarchy edge
+      //   chordLayer        — <path> per active MLT highlight
+      //   branchNodeLayer   — <circle> root + style_mode hubs + month dots
+      //   nodeSel           — <g.node> per leaf
+      const branchLayer = root.append('g')
+        .attr('class', 'branches')
         .style('pointer-events', 'none')
+      const chordLayer = root.append('g')
+        .attr('class', 'chords')
+        .style('pointer-events', 'none')
+      const branchNodeLayer = root.append('g')
+        .attr('class', 'branch-nodes')
+        .style('pointer-events', 'none')
+      // The single root circle at canvas center — the visible anchor
+      // every styleMode branch radiates from.
+      const rootNodeCircle = branchNodeLayer.append('circle')
+        .attr('class', 'root-node')
+        .attr('r', ROOT_R)
+        .attr('fill', '#1a1a1a')
+        .style('opacity', 0.7)
 
       // (linkSel is dead from earlier iterations — kept as an empty
       // selection so beeswarm/radial code that references it still
@@ -187,24 +440,52 @@ export default function SculptureCanvas({
         .attr('class', 'node')
         .style('cursor', 'pointer')
 
-      // Network-mode dot radius. Beeswarm and radial scale circles via
-      // their own d.r writes; applyNetwork resets back to NODE_DOT_R.
-      const NODE_DOT_R = 6
-      nodeSel.append('circle')
-        .attr('r', NODE_DOT_R)
-        .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-        .attr('stroke', 'none')
-
-      nodeSel.append('text')
-        .attr('class', 'label')
+      // Hover tooltip — a single <text> element painted above every
+      // other layer. Hidden until a node hover sets its text +
+      // position, hidden again on mouseleave. Outside the zoom-root
+      // so it never gets clipped by transforms; positioned in SVG
+      // user space.
+      const tooltipText = svg.append('text')
+        .attr('class', 'hover-tooltip')
         .attr('font-family', 'monospace')
         .attr('font-size', 11)
-        .attr('fill', '#ddd')
         .attr('text-anchor', 'middle')
-        .attr('dy', d => -d.r - 6)
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
+        .attr('dy', '0.32em')
+      function showTooltip(text, x, y, color) {
+        tooltipText
+          .attr('x', x)
+          .attr('y', y)
+          .attr('fill', color || '#1a1a1a')
+          .text(text)
+          .style('opacity', 1)
+      }
+      function hideTooltip() {
+        tooltipText.style('opacity', 0)
+      }
+
+      // Corpus-mode circles: uniform LEAF_R, per-node varied palette
+      // fill, 0.85 opacity. Beeswarm/radial overwrite r via their
+      // appliers; applyNetwork resets back to LEAF_R.
+      nodeSel.append('circle')
+        .attr('r', d => d.r)
+        .attr('fill', d => nodeColor(d, palette))
+        .attr('stroke', 'none')
+        .attr('fill-opacity', NODE_OPACITY_CORPUS)
+
+      // Hover-only label: first 8 words at 11px monospace, hidden
+      // until focusNode raises opacity. Tucks beside the leaf along
+      // (Per-node permanent labels removed — hover routes through the
+      // single canvas-level tooltipText element above. Beeswarm and
+      // radial appliers still expect a 'text.label' inside <g.node>
+      // for legacy reasons; we keep one but with empty text and
+      // pointer-events: none, so resetLabelsToDefault and the radial
+      // applier still resolve their selections without crashing.)
+      nodeSel.append('text')
+        .attr('class', 'label')
         .style('opacity', 0)
         .style('pointer-events', 'none')
-        .text(d => firstWords(d.sentence, 4))
 
       // Radial-mode center text was previously rendered into a <foreignObject>
       // here. It moved to a page-level HTML overlay (see app/search/page.jsx)
@@ -219,16 +500,29 @@ export default function SculptureCanvas({
         adjacency.get(target)?.add(source)
       }
 
-      // Hover focus on the corpus dots: the hovered node shows its
-      // label; the activation engine handles the visual link-drawing
-      // separately (see activateNode). No other node visuals change.
-      function focusNode(focusId) {
-        nodeSel.select('text.label')
-          .style('opacity', d => d.id === focusId ? 1 : 0)
+      // Hover focus uses the canvas-level tooltipText element.
+      // Position the tooltip ~16px outboard of the node along its
+      // radial axis so it never overlaps the leaf circle and reads
+      // outward like the per-leaf labels did. For nodes very near
+      // the center (root, depth-1 hubs) the radial direction is
+      // ill-defined; fall back to "just above the node".
+      function tooltipAnchor(x, y) {
+        const ci = clusterInfo
+        const dx = x - ci.cx
+        const dy = y - ci.cy
+        const len = Math.hypot(dx, dy)
+        if (len < 4) return { x, y: y - 16 }
+        const k = (len + 16) / len
+        return { x: ci.cx + dx * k, y: ci.cy + dy * k }
       }
-
+      function focusNode(focusId) {
+        const d = nodeById.get(focusId)
+        if (!d) return hideTooltip()
+        const a = tooltipAnchor(d.x, d.y)
+        showTooltip(firstWords(d.sentence, 8), a.x, a.y, STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
+      }
       function clearNodeFocus() {
-        nodeSel.select('text.label').style('opacity', 0)
+        hideTooltip()
       }
 
       // onSelect can change between renders; keep a single ref object
@@ -236,31 +530,22 @@ export default function SculptureCanvas({
       // clicks always invoke the current callback without re-binding.
       const onSelectRef = { current: null }
 
-      // Hovering state for the activation engine — held in a closure-
-      // shared object so node handlers and the interval can read/write
-      // the same flag without re-binding.
-      const isHoveringRef = { hovering: false }
-
-      // Node interactions:
-      //   - mouseenter: activate the node (engine draws lines), pause
-      //     the autonomous timer, show the hover label.
-      //   - mouseleave: hide label, resume timer.
-      //   - click: enter Scale 2 radial via onSelect.
-      // All gated to network mode — beeswarm/radial set their own
-      // handlers via the existing dim/click flows. activateNode and
-      // focusNode are defined further down in this scope; closures
-      // resolve them lazily when DOM events fire.
       nodeSel
         .on('mouseenter', (_event, d) => {
           if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
-          isHoveringRef.hovering = true
           focusNode(d.id)
-          activateNode(d.id)
+          // Pause the autonomous engine and immediately fire this
+          // node's tree-path activations into the hover slot. Each
+          // path stages with NEIGHBOR_STAGGER_MS between neighbors.
+          isHoveringRef.hovering = true
+          extinguishSlot('hover', 0)
+          activateNode(d.id, 'hover')
         })
         .on('mouseleave', () => {
           if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
-          isHoveringRef.hovering = false
           clearNodeFocus()
+          isHoveringRef.hovering = false
+          extinguishSlot('hover', HOVER_FADE_OUT_MS)
         })
         .on('click', (event, d) => {
           event.stopPropagation()
@@ -269,175 +554,427 @@ export default function SculptureCanvas({
           }
         })
 
+      // The simulation object is kept around because beeswarm and radial
+      // reinstall their own forces on it (forceX/Y to date+score for
+      // beeswarm; pinning + collide for radial). Corpus mode uses a
+      // fixed ring layout instead — we build the sim with no forces so
+      // it sits idle until a mode-applier wakes it up.
       const simulation = d3.forceSimulation(simNodes)
-        .force('link', d3.forceLink(links)
-          .id(d => d.id).distance(220).strength(0.4))
-        .force('charge', d3.forceManyBody().strength(-700))
-        .force('center', d3.forceCenter(W / 2, H / 2))
-        .force('x', d3.forceX(W / 2).strength(0.06))
-        .force('y', d3.forceY(H / 2).strength(0.14))
-        .force('collide', d3.forceCollide(d => d.r + 6).iterations(2))
+        .stop()
         .on('tick', () => {
           // Beeswarm/radial reuse this simulation; only their forces are
-          // ticking. We just translate the circles. Cells stay frozen.
+          // ticking. Clamp every tick so high-repulsion outliers can't
+          // bleed below the legend strip or past the canvas edges during
+          // an alpha-restart transition. The 8px buffer at the bottom
+          // keeps the largest circles clear of the strip.
+          const { W: tw, H: th } = sceneRef.current || { W, H }
+          simNodes.forEach(d => {
+            d.x = Math.max(d.r, Math.min(tw - d.r, d.x))
+            d.y = Math.max(d.r, Math.min(th - 48 - d.r - 8, d.y))
+          })
           nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
         })
 
-      // ---- Force-sim settle ----
+      // ---- Initial radial cluster placement ----
       //
-      // Run the simulation headlessly to settle nodes into their
-      // network layout, then pin and stop. The settled positions feed
-      // the activation engine (line endpoints) and serve as the
-      // restore-target when returning from beeswarm/radial.
-      simulation.tick(300)
-      simulation.stop()
-      simNodes.forEach(d => { d.fx = d.x; d.fy = d.y })
+      // No force settle — corpus mode uses a deterministic d3.cluster()
+      // hierarchy: root → 5 style_mode branches → 48 sentence leaves.
+      // buildClusterLayout writes positions into simNodes and returns
+      // the geometry; we translate the existing <g.node> elements onto
+      // those positions but defer paintCluster() to the first
+      // applyNetwork() call, which decides on the on-load animation.
+      // (Letting the mode-swap effect drive the first paint avoids a
+      // double-paint that would clobber the stroke-dashoffset tween.)
+      let clusterInfo = buildClusterLayout(simNodes, W, H)
       nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
+      // Index leaf-node id → hierarchy node so the activation engine
+      // can walk .path() between any two leaves. Declared up here
+      // (before any call site) because the buildLeafHIndex() function
+      // declaration hoists but `const leafHById` does not — calling
+      // the helper before its closure target exists would TDZ.
+      const leafHById = new Map()
+      buildLeafHIndex()
 
-      // Cache the settled positions so applyNetwork can restore them
-      // after beeswarm/radial overwrite n.fx/fy with their own targets.
-      // `let` because the resize handler refreshes this when nodes
-      // settle into a new viewport.
-      let settledPositions = new Map(
-        simNodes.map(n => [n.id, { x: n.x, y: n.y }])
-      )
+      // Radial link generator — d3.linkRadial() draws a smooth bezier
+      // between two (angle, radius) endpoints. Default convention is
+      // 0 = 12 o'clock; we offset by -π/2 so it lines up with the
+      // d3.cluster().size([2π, R]) convention where x=0 is "down".
+      // (Same convention used in the canonical Observable example.)
+      const linkRadial = d3.linkRadial()
+        .angle(d => d.x)
+        .radius(d => d.y)
 
-      // ---- Activation engine ----
-      //
-      // Every 2 seconds (autonomous) or on hover (interactive), one
-      // node is "activated": short lines draw progressively from the
-      // node to each of its MLT neighbors using stroke-dashoffset
-      // tweens, hold for 1 second, then fade out over 1.5 seconds.
-      // Multiple activations overlap; at any moment 3-5 sets are in
-      // flight. The interval pauses while the user is hovering.
+      function paintCluster({ cx, cy, R, branches, months, allLinks, rootH, leaves }, { animate = false } = {}) {
+        // ---- Branches ----
+        // One <path> per hierarchy edge — both root→styleMode (depth 1)
+        // and styleMode→leaf (depth 2). Color follows the deeper end's
+        // style_mode so the whole sub-tree reads as one color family.
+        const branchSel = branchLayer
+          .attr('transform', `translate(${cx}, ${cy})`)
+          .selectAll('path.branch')
+          .data(allLinks, d => `${d.source.data.name}|${d.target.data.name}`)
+        branchSel.exit().remove()
+        const branchEnter = branchSel.enter().append('path')
+          .attr('class', 'branch')
+          .attr('fill', 'none')
+          .attr('stroke-width', 1)
+        const branchMerged = branchEnter.merge(branchSel)
+          .attr('d', d => linkRadial({ source: d.source, target: d.target }))
+          .attr('stroke', d => STYLE_COLOR[d.styleMode] || DEFAULT_COLOR)
+          .style('opacity', 0.5)
 
-      const ACTIVATION_INTERVAL_MS = 1200
-      const ACTIVATION_DRAW_MS = 800
-      const ACTIVATION_HOLD_MS = 1000
-      const ACTIVATION_FADE_MS = 1500
-      const ACTIVATION_MAX_OPACITY = 0.85
+        // ---- Inner branch nodes ----
+        // One small circle per style_mode anchor — same visual weight
+        // as the leaves and the root so the tree reads as edges, not
+        // a hierarchy of hubs. Matches the canonical Observable form.
+        const bnodeSel = branchNodeLayer
+          .attr('transform', `translate(${cx}, ${cy})`)
+          .selectAll('circle.branch-node')
+          .data(branches, d => d.styleMode)
+        bnodeSel.exit().remove()
+        const bnodeEnter = bnodeSel.enter().append('circle')
+          .attr('class', 'branch-node')
+          .attr('r', BRANCH_R)
+        const bnodesMerged = bnodeEnter.merge(bnodeSel)
+          .attr('cx', d => d.x - cx)
+          .attr('cy', d => d.y - cy)
+          .attr('fill', d => STYLE_COLOR[d.styleMode] || DEFAULT_COLOR)
+          .style('opacity', 0.8)
 
-      // Track every line element currently in flight so we can
-      // .interrupt().remove() them on mode transitions.
-      const activeLines = new Set()
+        // ---- Month nodes (3rd-level subdivision) ----
+        // Small 4px circles for each month bucket that earned its own
+        // intermediate hierarchy node. Same color as the parent
+        // style_mode. Hover wires (mouseenter/leave) defined alongside
+        // the branch hub circles below so all internal nodes share
+        // the same tooltip routing.
+        const MONTH_R = BRANCH_R
+        const monthSel = branchNodeLayer
+          .selectAll('circle.month-node')
+          .data(months, d => `${d.styleMode}|${d.monthLabel}|${d.angle.toFixed(1)}`)
+        monthSel.exit().remove()
+        const monthEnter = monthSel.enter().append('circle')
+          .attr('class', 'month-node')
+          .attr('r', MONTH_R)
+          .style('pointer-events', 'all')
+          .style('cursor', 'default')
+        const monthMerged = monthEnter.merge(monthSel)
+          .attr('cx', d => d.x - cx)
+          .attr('cy', d => d.y - cy)
+          .attr('fill', d => STYLE_COLOR[d.styleMode] || DEFAULT_COLOR)
+          .style('opacity', 0.8)
+        // Wire month-node hover → tooltip (re-bound each paint so the
+        // captured cluster geometry stays current).
+        monthMerged
+          .on('mouseenter', (_event, d) => {
+            if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+            const a = tooltipAnchor(d.x, d.y)
+            showTooltip(d.monthLabel, a.x, a.y, STYLE_COLOR[d.styleMode] || DEFAULT_COLOR)
+          })
+          .on('mouseleave', () => hideTooltip())
 
-      function activateNode(nodeId) {
-        const source = nodeById.get(nodeId)
-        if (!source) return
-        const neighbors = (graph[nodeId] || [])
-          .map(({ id }) => nodeById.get(id))
-          .filter(Boolean)
-        const color = STYLE_COLOR[source.style_mode] || DEFAULT_COLOR
+        // Wire branch-hub hover → tooltip (style_mode name).
+        bnodesMerged
+          .style('pointer-events', 'all')
+          .on('mouseenter', (_event, d) => {
+            if (sceneRef.current?.mode !== 'network' || sceneRef.current?.dim) return
+            const a = tooltipAnchor(d.x, d.y)
+            showTooltip(d.styleMode, a.x, a.y, STYLE_COLOR[d.styleMode] || DEFAULT_COLOR)
+          })
+          .on('mouseleave', () => hideTooltip())
 
-        for (const target of neighbors) {
-          const dx = target.x - source.x
-          const dy = target.y - source.y
-          const totalLen = Math.hypot(dx, dy) || 1
+        // ---- On-load animation ----
+        //
+        // Branches draw progressively via stroke-dashoffset; inner
+        // edges (depth 1) at t=0, outer (2/3) at t=200ms, both 1200ms.
+        // Branch hubs + month dots fade in as their parent edge lands.
+        // Leaf circles are NOT animated by paintCluster — applyNetwork
+        // schedules its own r/fill/fill-opacity transition on the same
+        // selection right after this returns, and competing transitions
+        // would cancel each other and strand the leaves invisible.
+        nodeSel.select('circle').style('opacity', null)
+        if (animate) {
+          bnodesMerged.style('opacity', 0)
+          monthMerged.style('opacity', 0)
 
-          const lineNode = lineLayer.append('line')
-            .attr('class', 'activation')
-            .attr('x1', source.x).attr('y1', source.y)
-            .attr('x2', target.x).attr('y2', target.y)
-            .attr('stroke', color)
-            .attr('stroke-width', 1.5)
-            .attr('stroke-opacity', 0)
-            .attr('stroke-dasharray', totalLen)
-            .attr('stroke-dashoffset', totalLen)
-            .node()
-
-          activeLines.add(lineNode)
-
-          d3.select(lineNode)
-            // Phase 1: draw — stroke pulls itself across the line
-            // while opacity rises to its hold value.
-            .transition().duration(ACTIVATION_DRAW_MS).ease(d3.easeCubicInOut)
+          branchMerged.each(function (d) {
+            const len = this.getTotalLength?.() ?? 100
+            const delay = d.depth === 1 ? 0 : 200
+            d3.select(this)
+              .attr('stroke-dasharray', `${len} ${len}`)
+              .attr('stroke-dashoffset', len)
+              .transition()
+              .delay(delay)
+              .duration(1200)
+              .ease(d3.easeCubicOut)
               .attr('stroke-dashoffset', 0)
-              .attr('stroke-opacity', ACTIVATION_MAX_OPACITY)
-            // Phase 2: hold (delay before phase 3 — d3 chains transitions
-            // sequentially via .transition() following another).
-            // Phase 3: fade out.
-            .transition().delay(ACTIVATION_HOLD_MS).duration(ACTIVATION_FADE_MS)
+              .on('end', function () {
+                d3.select(this).attr('stroke-dasharray', null)
+              })
+          })
+
+          bnodesMerged.transition()
+            .delay(900)
+            .duration(400)
+            .style('opacity', 0.8)
+          monthMerged.transition()
+            .delay(1100)
+            .duration(400)
+            .style('opacity', 0.8)
+        } else {
+          bnodesMerged.style('opacity', 0.8)
+          monthMerged.style('opacity', 0.8)
+          branchMerged.style('opacity', 0.5)
+        }
+      }
+
+      // Helper — does an angle (in degrees, 0=right) fall on the left
+      // half of the circle? Used to flip per-leaf labels so they always
+      // read outward without appearing upside-down.
+      function isLeftHalf(angleDeg) {
+        const a = ((angleDeg % 360) + 360) % 360
+        return a > 90 && a < 270
+      }
+
+      // ---- Tree-traveling MLT activation ----
+      //
+      // When a sentence activates, the highlight travels through the
+      // existing tree edges from the source leaf up to the lowest
+      // common ancestor with each MLT neighbor, then back down to the
+      // neighbor. The tree is the medium — no chords cross the
+      // canvas. Each segment is an overlay <path> in chordLayer that
+      // re-traces the underlying branch using the same d3.linkRadial
+      // generator the branches use, then animates with stroke-
+      // dashoffset.
+      //
+      // For our 2-level hierarchy, paths are length 2 (same style_mode)
+      // or 4 (cross style_mode). The total travel time is fixed at
+      // PATH_TRAVEL_MS regardless of segment count, so cross-style
+      // paths animate twice as fast per segment as same-style paths.
+      //
+      // One activation per ~3s; per activation, the source leaf's 5
+      // MLT neighbors are fired sequentially 600ms apart. Each
+      // highlight (gradient + N segment paths) is tagged with a unique
+      // class so it can be cleaned up after its fade completes.
+
+      const HIGHLIGHT_WIDTH = 2.5
+      const HIGHLIGHT_OPACITY = 0.85
+      const PATH_TRAVEL_MS = 1200
+      const PATH_FADE_OUT_MS = 1500
+      const NEIGHBOR_STAGGER_MS = 600
+      const HOVER_FADE_IN_MS = 200
+      const HOVER_FADE_OUT_MS = 1000
+      const AUTO_INTERVAL_MS = 3000
+
+      // Monotonic id counter for activation gradients/classes — used
+      // to dedupe DOM elements so overlapping activations never collide.
+      let actSeq = 0
+
+      // (leafHById is declared above the first buildLeafHIndex() call
+      // — see ~line 482 — to avoid a temporal dead zone error.
+      // buildLeafHIndex is hoisted as a function declaration but the
+      // const binding it closes over is not.)
+      function buildLeafHIndex() {
+        leafHById.clear()
+        for (const l of clusterInfo.leaves) leafHById.set(l.node.id, l.hNode)
+      }
+
+      // Walk the tree path from src leaf to tgt leaf. d3.hierarchy's
+      // .path(target) walks up to the lowest common ancestor then back
+      // down. Returns an array of [parent, child] pairs corresponding
+      // to the existing branch edges. Pair direction matches the
+      // renderer's (source=parent, target=child) convention so we can
+      // feed linkRadial the same way the branches do.
+      function treePathSegments(srcLeafId, tgtLeafId) {
+        const a = leafHById.get(srcLeafId)
+        const b = leafHById.get(tgtLeafId)
+        if (!a || !b) return []
+        const nodes = a.path(b) // [a, ..., lca, ..., b]
+        const segs = []
+        for (let i = 0; i < nodes.length - 1; i++) {
+          const x = nodes[i]
+          const y = nodes[i + 1]
+          // Identify which is the parent (the one with shallower depth).
+          const parent = x.depth < y.depth ? x : y
+          const child = x.depth < y.depth ? y : x
+          // Direction along the highlight travel: src → tgt. Mark
+          // whether this segment traces forward (parent→child along
+          // the underlying edge) or backward (child→parent).
+          const reversed = (x === child)
+          segs.push({ parent, child, reversed })
+        }
+        return segs
+      }
+
+      // Animate one MLT path: src leaf → tgt leaf via the tree.
+      // Appends a <linearGradient> + N segment paths to chordLayer,
+      // tweens them sequentially, then schedules a fade-out + cleanup.
+      // The `slot` class lets a whole activation be wiped on mode
+      // transitions or before a fresh hover replaces it.
+      function animateTreePath(srcLeafId, tgtLeafId, slot, startDelay) {
+        const segs = treePathSegments(srcLeafId, tgtLeafId)
+        if (!segs.length) return
+        const src = nodeById.get(srcLeafId)
+        const tgt = nodeById.get(tgtLeafId)
+        if (!src || !tgt) return
+
+        const sColor = STYLE_COLOR[src.style_mode] || DEFAULT_COLOR
+        const tColor = STYLE_COLOR[tgt.style_mode] || DEFAULT_COLOR
+        const id = actSeq++
+        const gradId = `act-grad-${slot}-${id}`
+        const segClass = `act-seg-${slot}-${id}`
+
+        // One gradient per activation, anchored to the leaf endpoints
+        // in user space so the color reads as src→tgt across every
+        // segment regardless of the segment's own orientation.
+        const grad = defs.append('linearGradient')
+          .attr('class', `act-grad act-grad-${slot}`)
+          .attr('id', gradId)
+          .attr('gradientUnits', 'userSpaceOnUse')
+          .attr('x1', src.x).attr('y1', src.y)
+          .attr('x2', tgt.x).attr('y2', tgt.y)
+        grad.append('stop').attr('offset', '0%').attr('stop-color', sColor)
+        grad.append('stop').attr('offset', '100%').attr('stop-color', tColor)
+
+        const perSegMs = PATH_TRAVEL_MS / segs.length
+
+        // Build all segments first so we can read getTotalLength on
+        // each before scheduling.
+        const segNodes = segs.map(({ parent, child, reversed }) => {
+          // Re-trace the branch with the same linkRadial used by the
+          // tree, so the overlay aligns pixel-perfect.
+          const d = linkRadial({ source: parent, target: child })
+          // chordLayer is translated to (cx, cy) — wait, it isn't.
+          // branchLayer is. Let me use a transform to match.
+          const node = chordLayer.append('path')
+            .attr('class', `activation ${segClass} act-${slot}`)
+            .attr('transform', `translate(${clusterInfo.cx}, ${clusterInfo.cy})`)
+            .attr('d', d)
+            .attr('fill', 'none')
+            .attr('stroke', `url(#${gradId})`)
+            .attr('stroke-width', HIGHLIGHT_WIDTH)
+            .attr('stroke-opacity', HIGHLIGHT_OPACITY)
+            .node()
+          const len = node.getTotalLength?.() ?? 100
+          d3.select(node)
+            .attr('stroke-dasharray', `${len} ${len}`)
+            .attr('stroke-dashoffset', reversed ? -len : len)
+          return { node, len, reversed }
+        })
+
+        // Sequentially tween dashoffset to 0 — segment N starts when
+        // segment N-1 finishes. Then schedule the whole highlight to
+        // fade after the last segment lands.
+        segNodes.forEach((s, i) => {
+          d3.select(s.node)
+            .transition()
+            .delay(startDelay + i * perSegMs)
+            .duration(perSegMs)
+            .ease(d3.easeCubicInOut)
+            .attr('stroke-dashoffset', 0)
+        })
+
+        const totalDraw = startDelay + PATH_TRAVEL_MS
+        d3.timeout(() => {
+          d3.selectAll(segNodes.map(s => s.node))
+            .interrupt()
+            .transition()
+            .duration(PATH_FADE_OUT_MS)
             .ease(d3.easeCubicIn)
-              .attr('stroke-opacity', 0)
-            .on('end', function () {
-              activeLines.delete(this)
-              this.remove()
-            })
-            .on('interrupt', function () {
-              activeLines.delete(this)
-              this.remove()
-            })
+            .attr('stroke-opacity', 0)
+            .remove()
+          d3.timeout(() => grad.remove(), PATH_FADE_OUT_MS + 50)
+        }, totalDraw)
+      }
+
+      // Activate one source leaf — fires its 5 MLT neighbors
+      // sequentially staggered by NEIGHBOR_STAGGER_MS.
+      function activateNode(nodeId, slot) {
+        const neighbors = (graph[nodeId] || []).map(n => n.id).filter(Boolean)
+        neighbors.forEach((tgtId, i) => {
+          animateTreePath(nodeId, tgtId, slot, i * NEIGHBOR_STAGGER_MS)
+        })
+      }
+
+      // Fade out + remove every active highlight in a slot. Used on
+      // mouseleave (hover slot) and on mode transitions (both slots).
+      function extinguishSlot(slot, fadeMs) {
+        const segs = chordLayer.selectAll(`path.act-${slot}`)
+        const grads = defs.selectAll(`linearGradient.act-grad-${slot}`)
+        segs.interrupt()
+          .transition()
+          .duration(fadeMs)
+          .ease(d3.easeCubicIn)
+          .attr('stroke-opacity', 0)
+          .remove()
+        d3.timeout(() => grads.remove(), fadeMs + 50)
+      }
+
+      function clearAllChords() {
+        chordLayer.selectAll('path.activation').interrupt().remove()
+        defs.selectAll('linearGradient.act-grad').remove()
+      }
+
+      // ---- Autonomous engine ----
+      let autoIntervalId = null
+      const isHoveringRef = { hovering: false }
+
+      function autoTick() {
+        if (isHoveringRef.hovering) return
+        if (sceneRef.current?.mode !== 'network') return
+        if (sceneRef.current?.dim) return
+        const i = Math.floor(Math.random() * simNodes.length)
+        activateNode(simNodes[i].id, 'auto')
+      }
+
+      function startAutoEngine() {
+        if (autoIntervalId !== null) return
+        autoIntervalId = setInterval(autoTick, AUTO_INTERVAL_MS)
+      }
+
+      function stopAutoEngine() {
+        if (autoIntervalId !== null) {
+          clearInterval(autoIntervalId)
+          autoIntervalId = null
         }
       }
 
-      let activationIntervalId = null
-
-      function startActivationEngine() {
-        if (activationIntervalId !== null) return
-        activationIntervalId = setInterval(() => {
-          if (isHoveringRef.hovering) return
-          if (sceneRef.current?.mode !== 'network') return
-          if (sceneRef.current?.dim) return
-          const i = Math.floor(Math.random() * simNodes.length)
-          activateNode(simNodes[i].id)
-        }, ACTIVATION_INTERVAL_MS)
-      }
-
-      function stopActivationEngine() {
-        if (activationIntervalId !== null) {
-          clearInterval(activationIntervalId)
-          activationIntervalId = null
-        }
-      }
-
-      function clearAllActivationLines() {
-        // .interrupt() triggers the 'interrupt' handler above, which
-        // removes the line from activeLines and the DOM.
-        for (const el of [...activeLines]) {
-          d3.select(el).interrupt()
-        }
-        // Defensive: any line that escaped activeLines tracking.
-        lineLayer.selectAll('line.activation').remove()
-        activeLines.clear()
-      }
-
-      // Kick the engine off — it'll fire its first activation in 2s.
-      startActivationEngine()
-
-
+      // Zoom/pan stays available on beeswarm + radial; corpus (network)
+      // mode has a fixed composition per painting reference, so the
+      // filter rejects all events while mode === 'network'. Node-class
+      // events are always excluded so click/drag on a circle never
+      // initiates a pan.
       const zoom = d3.zoom()
         .scaleExtent([0.2, 8])
-        .filter(event => !event.target.closest('.node'))
+        .filter(event => {
+          if (sceneRef.current?.mode === 'network') return false
+          return !event.target.closest('.node')
+        })
         .on('zoom', event => root.attr('transform', event.transform))
       svg.call(zoom)
 
       const handleResize = () => {
+        // Resize listener can outlive the scene if a previous render
+        // crashed before sceneRef was assigned (e.g. HMR after a
+        // ReferenceError). Bail out instead of throwing.
+        if (!sceneRef.current) return
         const w = wrapperRef.current?.clientWidth || window.innerWidth
         const h = wrapperRef.current?.clientHeight || window.innerHeight
         svg.attr('width', w).attr('height', h).attr('viewBox', `0 0 ${w} ${h}`)
+        bgRect.attr('width', w).attr('height', h)
         sceneRef.current.W = w
         sceneRef.current.H = h
         if (sceneRef.current.mode === 'network') {
-          // Re-settle into the new viewport. Wipe in-flight activation
-          // lines first — their endpoints are about to become invalid
-          // when nodes shift. Then unpin, run a quick alpha=0.5 settle,
-          // re-pin, refresh the position cache, and restart the engine.
-          clearAllActivationLines()
-          stopActivationEngine()
-          simNodes.forEach(d => { d.fx = null; d.fy = null })
-          simulation
-            .force('center', d3.forceCenter(w / 2, h / 2))
-            .force('x', d3.forceX(w / 2).strength(0.06))
-            .force('y', d3.forceY(h / 2).strength(0.14))
-            .alpha(0.5)
-          simulation.tick(150)
-          simulation.stop()
-          simNodes.forEach(d => { d.fx = d.x; d.fy = d.y })
+          // Rebuild the cluster against the new viewport. No animation
+          // on resize — geometry changes shouldn't replay the on-load
+          // draw. Any in-flight chord activations are killed because
+          // their endpoints would otherwise be anchored to stale
+          // positions; the engine will fire a fresh activation soon.
+          clearAllChords()
+          clusterInfo = buildClusterLayout(simNodes, w, h)
+          buildLeafHIndex()
+          paintCluster(clusterInfo, { animate: false })
+          sceneRef.current.clusterInfo = clusterInfo
           nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
-          settledPositions = new Map(
-            simNodes.map(n => [n.id, { x: n.x, y: n.y }])
-          )
-          startActivationEngine()
         } else if (sceneRef.current.mode === 'beeswarm') {
           simulation.force('center', d3.forceCenter(w / 2, h / 2)).alpha(0.3).restart()
           applyBeeswarm()
@@ -452,17 +989,20 @@ export default function SculptureCanvas({
       // Pre-build immutable scene state.
       sceneRef.current = {
         svg, root, simulation, nodeSel, linkSel, axisLayer, arcLayer,
-        lineLayer,
+        bgRect, branchLayer, chordLayer, branchNodeLayer,
         simNodes, nodeById, links, adjacency, W, H, mode: 'network',
         dim: false,
-        settledPositions,
-        startActivationEngine, stopActivationEngine, clearAllActivationLines,
+        clusterInfo,
+        // Set true after the first applyNetwork() to gate the on-load
+        // animation — we want the entrance only on first paint, not on
+        // every return to corpus mode.
+        hasInitialPainted: false,
         clearNodeFocus,
         dateHue, applyNetwork, applyBeeswarm, applyRadial, onSelectRef,
         cleanup: () => {
           window.removeEventListener('resize', handleResize)
-          stopActivationEngine()
-          clearAllActivationLines()
+          stopAutoEngine()
+          clearAllChords()
           simulation.stop()
         },
       }
@@ -473,11 +1013,12 @@ export default function SculptureCanvas({
       // ====== mode appliers ======
 
       // Hard-reset every per-node <text class="label"> back to its initial
-      // appearance: hidden, the first-4-words text, monospace at 11px,
-      // dy aligned to baseR. Called at the top of every mode-apply so
-      // residue from radial (per-style typography, "first 6 words" text,
-      // 14px, dy=-r-8) or hover (opacity 1) doesn't bleed into the next
-      // mode. interrupt() cuts in-flight transitions so the reset wins.
+      // appearance: hidden, full sentence text, monospace at 11px, dy
+      // aligned just above the leaf circle. Called at the top of every
+      // mode-apply so residue from radial (per-style typography, "first
+      // 6 words" text, 14px) or hover (opacity 1) doesn't bleed into
+      // the next mode. interrupt() cuts in-flight transitions so the
+      // reset wins.
       function resetLabelsToDefault() {
         nodeSel.select('text.label')
           .interrupt()
@@ -485,68 +1026,110 @@ export default function SculptureCanvas({
           .style('font-family', 'monospace')
           .style('font-style', 'normal')
           .attr('font-size', 11)
-          .attr('dy', d => -d.baseR - 6)
-          .text(d => firstWords(d.sentence, 4))
+          .attr('dy', '0.32em')
+          .attr('text-anchor', d => isLeftHalf(d.angle) ? 'end' : 'start')
+          .attr('x', d => isLeftHalf(d.angle) ? -8 : 8)
+          .attr('transform', d => {
+            const a = d.angle ?? 0
+            return `rotate(${a})` + (isLeftHalf(a) ? ' rotate(180)' : '')
+          })
+          .text(d => firstWords(d.sentence, 8))
       }
 
       function applyNetwork() {
         sceneRef.current.mode = 'network'
         sceneRef.current.lastRadial = null
 
+        // Reset any pan/zoom the user applied during beeswarm/radial so
+        // the corpus composition returns to its fixed framing.
+        svg.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .call(zoom.transform, d3.zoomIdentity)
+
         // Full label reset — see resetLabelsToDefault doc.
         resetLabelsToDefault()
         clearNodeFocus()
 
-        // Restore cached settled positions. Beeswarm/radial overwrite
-        // n.fx/fy with their own targets, so re-pin from the cache.
-        // Set radius to the small dot size used in network mode.
-        simNodes.forEach(d => {
-          const p = settledPositions.get(d.id)
-          if (p) {
-            d.x = p.x; d.y = p.y
-            d.fx = p.x; d.fy = p.y
-          }
-          d.r = NODE_DOT_R
-        })
-        nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
-        nodeSel.select('circle').attr('r', NODE_DOT_R)
+        // Rebuild the cluster against the current viewport — beeswarm/
+        // radial overwrite n.x/y/fx/fy with their own targets, so reset
+        // from the deterministic cluster layout. Also restore per-node
+        // length-scaled radius. paintCluster renders branches, branch
+        // nodes, and group labels and runs the on-load animation on
+        // first paint only.
+        const { W: w, H: h } = sceneRef.current
+        const isFirstPaint = !sceneRef.current.hasInitialPainted
 
-        // Stop the sim — corpus mode reads frozen positions, no ticking.
+        // No labels → no bbox-fit loop. Build the cluster at the
+        // spec'd 0.42 * min(W, H-48) radius and paint once.
+        clusterInfo = buildClusterLayout(simNodes, w, h)
+        buildLeafHIndex()
+        simNodes.forEach(d => { d.r = LEAF_R })
+        nodeSel.attr('transform', d => `translate(${d.x},${d.y})`)
+        paintCluster(clusterInfo, { animate: isFirstPaint })
+        sceneRef.current.clusterInfo = clusterInfo
+        sceneRef.current.hasInitialPainted = true
+
+        // Stop the sim — corpus mode reads frozen cluster positions.
         simulation.alpha(0).stop()
 
-        // Restore corpus visuals: nodes back to full opacity + interactive,
-        // ancillary layers (axis, arcs) fade out, activation engine
-        // resumes with a fresh start.
-        clearAllActivationLines()
+        // Restore corpus visuals: warm ground, per-node varied fill,
+        // corpus-mode opacity, dark labels (against the light ground),
+        // cluster + chord layers visible. Beeswarm-only layers fade out.
+        bgRect.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .attr('fill', CANVAS_BG_GROUND)
+        // paintCluster already manages leaf opacity on first paint via
+        // its animation. On non-first paints (return from beeswarm/
+        // radial) it set leaves to opacity 1 directly — but the fill
+        // still needs to refresh.
+        nodeSel.select('circle')
+          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .attr('r', d => d.r)
+          .attr('fill', d => nodeColor(d, palette))
+          .attr('fill-opacity', NODE_OPACITY_CORPUS)
+        nodeSel.select('text.label').attr('fill', '#1a1a1a')
         nodeSel
           .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .style('opacity', 1)
           .style('pointer-events', 'auto')
+        branchLayer.transition().duration(TRANSITION_MS).style('opacity', 1)
+        branchNodeLayer.transition().duration(TRANSITION_MS).style('opacity', 1)
+        chordLayer.style('opacity', 1)
         axisLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
         arcLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
-        startActivationEngine()
+        // Start the autonomous chord-reveal engine. Hover always
+        // pauses it via isHoveringRef.
+        clearAllChords()
+        startAutoEngine()
       }
 
       function applyBeeswarm() {
         sceneRef.current.mode = 'beeswarm'
 
-        // Stop the activation engine and clear in-flight lines — the
-        // beeswarm transition shouldn't show stale corpus animation.
-        stopActivationEngine()
-        clearAllActivationLines()
         clearNodeFocus()
+        stopAutoEngine()
+        clearAllChords()
+        isHoveringRef.hovering = false
 
         // Full label reset — see resetLabelsToDefault doc.
         resetLabelsToDefault()
-        // Clear radial-only UI on entry
+        // Clear radial-only UI + cluster + chord layers on entry.
         arcLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
-        // Release any radial pinning so beeswarm forces can move nodes.
+        branchLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        chordLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        branchNodeLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        hideTooltip()
+        // Release ring pinning so beeswarm forces can move nodes.
         simNodes.forEach(d => { d.fx = null; d.fy = null })
         // Make sure nodes are visible/interactive (corpus mode left
         // them visible too, but other modes might not).
         nodeSel.style('opacity', 1).style('pointer-events', 'auto')
+        // Swap ground to deep; nodes opaque against black; labels light.
+        bgRect.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .attr('fill', CANVAS_BG_DEEP)
+        nodeSel.select('circle')
+          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .attr('fill-opacity', NODE_OPACITY_DEEP)
+        nodeSel.select('text.label').attr('fill', '#ddd')
 
         const hitsArr = sceneRef.current.hits || []
         const scoreById = new Map(hitsArr.map(h => [h.id, h.score]))
@@ -631,11 +1214,24 @@ export default function SculptureCanvas({
         const center = nodeById.get(centerId)
         if (!center) return
 
-        // Stop the activation engine and clear in-flight lines — the
-        // radial composition shouldn't show stale corpus animation.
-        stopActivationEngine()
-        clearAllActivationLines()
         clearNodeFocus()
+        stopAutoEngine()
+        clearAllChords()
+        isHoveringRef.hovering = false
+
+        // Hide cluster + chord layers — radial owns the canvas.
+        branchLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        chordLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        branchNodeLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        hideTooltip()
+
+        // Swap ground to deep; nodes opaque against black; labels light.
+        bgRect.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .attr('fill', CANVAS_BG_DEEP)
+        nodeSel.select('circle')
+          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+          .attr('fill-opacity', NODE_OPACITY_DEEP)
+        nodeSel.select('text.label').attr('fill', '#ddd')
 
         // Top 7 neighbors. If MLT returned fewer (rare on this corpus, but
         // possible for outlier seeds), the rings just have empty slots.
@@ -822,7 +1418,7 @@ export default function SculptureCanvas({
     scene.dim = dim
 
     function pickFill(d) {
-      if (hi && hi.has(d.id)) return STYLE_COLOR[d.style_mode] || DEFAULT_COLOR
+      if (hi && hi.has(d.id)) return nodeColor(d, palette)
       return fadedColor(d.style_mode)
     }
 
@@ -830,19 +1426,16 @@ export default function SculptureCanvas({
       nodeSel.select('circle').transition().duration(200).attr('fill', pickFill)
       nodeSel.style('pointer-events', 'none')
       scene.clearNodeFocus?.()
-      scene.stopActivationEngine?.()
-      scene.clearAllActivationLines?.()
     } else {
       nodeSel.style('pointer-events', 'auto')
       // If we're toggling dim off without changing mode (i.e. user just
-      // exited Scale 4 back to corpus), restore vivid fills and resume
-      // the engine. If a mode change is what triggered dim=false, the
-      // mode applier handles fills on its own.
+      // exited Scale 4 back to corpus), restore the per-node varied fill.
+      // If a mode change is what triggered dim=false, the mode applier
+      // handles fills on its own.
       if (scene.mode === 'network') {
         nodeSel.select('circle')
           .transition().duration(200)
-          .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-        scene.startActivationEngine?.()
+          .attr('fill', d => nodeColor(d, palette))
       }
     }
   }, [dim, highlightIds, sceneReady])
@@ -850,7 +1443,7 @@ export default function SculptureCanvas({
   return (
     <div
       ref={wrapperRef}
-      style={{ position: 'fixed', inset: 0, background: '#000', overflow: 'hidden' }}
+      style={{ position: 'fixed', inset: 0, background: CANVAS_BG_GROUND, overflow: 'hidden' }}
     >
       {error && (
         <div style={{

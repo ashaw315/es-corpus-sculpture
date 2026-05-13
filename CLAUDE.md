@@ -9,7 +9,8 @@ navigable by zooming through scales of language.
 Specs:
 - `docs/es-corpus-sculpture-spec-v2.md` — navigation model, data model, API
 - `docs/es-corpus-sculpture-spec-v3-kuo.md` — visual redesign direction (partially implemented)
-- `docs/corpus-activation-engine-spec.md` — corpus view animation system (BUILT)
+- `docs/corpus-activation-engine-spec.md` — corpus view animation system
+- `docs/radial-cluster-spec.md` — radial cluster layout (IN PROGRESS, replacing force sim)
 - `docs/palette-rotation-spec.md` — session palette rotation (BUILT)
 
 ---
@@ -70,7 +71,7 @@ referenced nodes not yet in nodes.json.
 | Step | What was built |
 |------|---------------|
 | I | Vivid palette (`lib/palette.mjs`), legend strip (`components/LegendStrip.jsx`), session palette rotation (4 palettes, random per load) |
-| II | Corpus view: overlapping sized circles on warm off-white ground, autonomous MLT line animation. Per-node color variation from style_mode base. ParticlePrototype removed. See `docs/corpus-activation-engine-spec.md` |
+| II | Corpus view: radial cluster ring layout (in progress) — sentences on circumference grouped by style_mode, chord paths for MLT connections. Off-white background, sized circles, per-node color variation. See `docs/radial-cluster-spec.md` |
 
 **Current production**: https://es-corpus-sculpture.vercel.app/search
 
