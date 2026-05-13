@@ -43,12 +43,17 @@ const ROOT_R = 4
 const TRANSITION_MS = 800
 const CELL_FADE_MS = 400
 
-// Radial-mode geometry. Inner ring holds top 3 MLT neighbors, outer ring
-// holds the next 4. Numbers tuned for a 1440x900 viewport.
-const RADIAL_INNER_R = 290
-const RADIAL_OUTER_R = 440
-// (Center sentence font size lives in the page overlay; only neighbor
-// labels stay inside the SVG.)
+// Radial-mode geometry. Step III replaces the old line+circle layout
+// with d3.pie + d3.arc wedges. innerRadius is the void containing the
+// center sentence overlay (rendered by app/search/page.jsx). The two
+// outerRadius rings give an "exploded" feel — top 3 MLT neighbors get
+// the inner ring (outerR=260), next 4 get the outer ring (outerR=360).
+const WEDGE_INNER_R = 120
+const WEDGE_INNER_OUTER_R = 260
+const WEDGE_OUTER_OUTER_R = 360
+const WEDGE_HOVER_LIFT = 20
+const WEDGE_PAD_ANGLE = 0.02
+// (Center sentence font size lives in the page overlay.)
 const RADIAL_NEIGHBOR_FONT = 14
 // Date hue gradient — deep blue (oldest) → warm amber (newest), corpus-wide.
 const HUE_OLDEST = 220
@@ -426,6 +431,15 @@ export default function SculptureCanvas({
         .attr('r', ROOT_R)
         .attr('fill', '#1a1a1a')
         .style('opacity', 0.7)
+
+      // Scale 2 wedge layer — d3.pie + d3.arc filled segments
+      // around the selected sentence. Hidden in network/beeswarm,
+      // owned entirely by applyRadial. Sits above branch nodes so
+      // wedges paint over the (faded-out) cluster geometry.
+      const wedgeLayer = root.append('g')
+        .attr('class', 'wedges')
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
 
       // (linkSel is dead from earlier iterations — kept as an empty
       // selection so beeswarm/radial code that references it still
@@ -989,7 +1003,7 @@ export default function SculptureCanvas({
       // Pre-build immutable scene state.
       sceneRef.current = {
         svg, root, simulation, nodeSel, linkSel, axisLayer, arcLayer,
-        bgRect, branchLayer, chordLayer, branchNodeLayer,
+        bgRect, branchLayer, chordLayer, branchNodeLayer, wedgeLayer,
         simNodes, nodeById, links, adjacency, W, H, mode: 'network',
         dim: false,
         clusterInfo,
@@ -1092,6 +1106,11 @@ export default function SculptureCanvas({
         branchLayer.transition().duration(TRANSITION_MS).style('opacity', 1)
         branchNodeLayer.transition().duration(TRANSITION_MS).style('opacity', 1)
         chordLayer.style('opacity', 1)
+        // Fade out the Step III wedge layer + clear it once gone so
+        // wedge paths don't shadow click events on the cluster.
+        wedgeLayer.transition().duration(TRANSITION_MS / 2)
+          .style('opacity', 0)
+          .on('end', () => wedgeLayer.selectAll('*').remove())
         axisLayer.transition().duration(TRANSITION_MS / 2)
           .style('opacity', 0)
         arcLayer.transition().duration(TRANSITION_MS / 2)
@@ -1112,11 +1131,14 @@ export default function SculptureCanvas({
 
         // Full label reset — see resetLabelsToDefault doc.
         resetLabelsToDefault()
-        // Clear radial-only UI + cluster + chord layers on entry.
+        // Clear radial-only UI + cluster + chord + wedge layers on entry.
         arcLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         branchLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         chordLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         branchNodeLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        wedgeLayer.transition().duration(TRANSITION_MS / 2)
+          .style('opacity', 0)
+          .on('end', () => wedgeLayer.selectAll('*').remove())
         hideTooltip()
         // Release ring pinning so beeswarm forces can move nodes.
         simNodes.forEach(d => { d.fx = null; d.fy = null })
@@ -1207,7 +1229,28 @@ export default function SculptureCanvas({
           .alpha(1).restart()
       }
 
+      // d3.arc generator — outerRadius depends on the wedge's rank
+      // (top 3 → inner ring at 260, next 4 → outer ring at 360).
+      // Hover bumps outer +20 via the `hover` flag on the datum.
+      const wedgeArc = d3.arc()
+        .innerRadius(WEDGE_INNER_R)
+        .outerRadius(d => {
+          const base = d.data.rank < 3 ? WEDGE_INNER_OUTER_R : WEDGE_OUTER_OUTER_R
+          return base + (d.data.hovered ? WEDGE_HOVER_LIFT : 0)
+        })
+        .padAngle(WEDGE_PAD_ANGLE)
+        .cornerRadius(0)
+
+      // d3.pie sorts by score descending and angles each segment by
+      // score share. sort(null) preserves the input order so wedges
+      // appear in the same sequence the MLT API returned (ranked).
+      const wedgePie = d3.pie()
+        .sort(null)
+        .value(d => Math.max(0.001, d.score))
+        .padAngle(WEDGE_PAD_ANGLE)
+
       function applyRadial(centerId, mltHits) {
+        const prevMode = sceneRef.current.mode
         sceneRef.current.mode = 'radial'
         sceneRef.current.lastRadial = { centerId, mltHits }
 
@@ -1218,159 +1261,174 @@ export default function SculptureCanvas({
         stopAutoEngine()
         clearAllChords()
         isHoveringRef.hovering = false
+        hideTooltip()
 
         // Hide cluster + chord layers — radial owns the canvas.
         branchLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         chordLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
         branchNodeLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
-        hideTooltip()
 
-        // Swap ground to deep; nodes opaque against black; labels light.
+        // Swap ground to deep. Hide every leaf circle — wedges and the
+        // page-level center sentence overlay carry the entire scene.
         bgRect.transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
           .attr('fill', CANVAS_BG_DEEP)
-        nodeSel.select('circle')
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('fill-opacity', NODE_OPACITY_DEEP)
-        nodeSel.select('text.label').attr('fill', '#ddd')
+        nodeSel
+          .transition().duration(TRANSITION_MS / 2).ease(d3.easeCubicInOut)
+          .style('opacity', 0)
+          .style('pointer-events', 'none')
 
-        // Top 7 neighbors. If MLT returned fewer (rare on this corpus, but
-        // possible for outlier seeds), the rings just have empty slots.
-        const top7 = (mltHits || []).slice(0, 7).filter(h => nodeById.has(h.id))
-        const visibleIds = new Set([centerId, ...top7.map(h => h.id)])
+        // Hide axis (beeswarm leftover).
+        axisLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
+        // Hide the old line-arc layer (legacy from pre-Step-III radial).
+        arcLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
 
+        // Position wedge layer at canvas center.
         const { W: w, H: h } = sceneRef.current
         const cx = w / 2
-        const cy = h / 2
+        const cy = (h - 48) / 2
+        wedgeLayer.attr('transform', `translate(${cx}, ${cy})`)
 
-        // Compute target positions for the 7 ring members. Inner ring (rank
-        // 0..2) at top, lower-right, lower-left. Outer ring (rank 3..6) sits
-        // at four cardinal-ish points offset 45° from the inner ring so
-        // members don't visually align radially with their inner-ring peers.
-        const targets = new Map()
-        targets.set(centerId, { x: cx, y: cy })
-        top7.forEach((hit, i) => {
-          let angle, radius
-          if (i < 3) {
-            angle = (i * 2 * Math.PI / 3) - Math.PI / 2
-            radius = RADIAL_INNER_R
-          } else {
-            angle = ((i - 3) * 2 * Math.PI / 4) - Math.PI / 2 + Math.PI / 4
-            radius = RADIAL_OUTER_R
-          }
-          targets.set(hit.id, {
-            x: cx + Math.cos(angle) * radius,
-            y: cy + Math.sin(angle) * radius,
-          })
-        })
-
-        // Pin every node so the simulation isn't fighting the layout. Visible
-        // members get their target slots; hidden members stay where they are
-        // (so when we transition back, they don't teleport).
-        simNodes.forEach(d => {
-          const t = targets.get(d.id)
-          if (t) { d.fx = t.x; d.fy = t.y }
-          else { d.fx = d.x; d.fy = d.y }
-        })
-
-        // Resize: center small (text does the heavy lifting), ring members
-        // sized by rank — top 3 inner-ring biggest, next 4 outer-ring smaller.
-        simNodes.forEach(d => {
-          if (d.id === centerId) {
-            d.r = 10
-          } else {
-            const rank = top7.findIndex(h => h.id === d.id)
-            if (rank === -1) {
-              d.r = d.baseR // hidden, but keep r consistent for safety
-            } else {
-              d.r = rank < 3 ? 18 : 13
-            }
-          }
-        })
-
-        nodeSel.select('circle')
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('r', d => d.r)
-          .attr('fill', d => STYLE_COLOR[d.style_mode] || DEFAULT_COLOR)
-
-        // Hide nodes that aren't part of the radial composition. Pointer-events
-        // off so hidden nodes can't intercept drags / clicks behind the scene.
-        nodeSel
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .style('opacity', d => visibleIds.has(d.id) ? 1 : 0)
-          .style('pointer-events', d => visibleIds.has(d.id) ? 'auto' : 'none')
-
-        // Ring-member labels: first ~6 words, style_mode-typed, visible.
-        nodeSel.select('text.label')
-          .text(d => visibleIds.has(d.id) && d.id !== centerId ? firstWords(d.sentence, 6) : '')
-          .each(function(d) {
-            const treatment = STYLE_FONT[d.style_mode] || DEFAULT_FONT
-            d3.select(this)
-              .style('font-family', treatment.family)
-              .style('font-style', treatment.style)
-              .attr('font-size', RADIAL_NEIGHBOR_FONT)
-              .attr('dy', -d.r - 8)
-          })
-          .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .style('opacity', d => (visibleIds.has(d.id) && d.id !== centerId) ? 0.85 : 0)
-
-        // (No network edges to hide — Step II removed link rendering.)
-
-        // Hide axis layer
-        axisLayer.transition().duration(TRANSITION_MS / 2).style('opacity', 0)
-
-        // Build arc data: one per neighbor connecting center → neighbor.
-        const arcData = top7.map(hit => {
-          const target = targets.get(hit.id)
-          const neighborNode = nodeById.get(hit.id)
+        // Build wedge data — top 7 MLT neighbors that exist in our
+        // corpus. rank carries the inner/outer ring assignment.
+        const top7 = (mltHits || []).slice(0, 7).filter(h => nodeById.has(h.id))
+        const wedgeData = top7.map((hit, i) => {
+          const neighbor = nodeById.get(hit.id)
           return {
             id: hit.id,
-            x1: cx, y1: cy,
-            x2: target.x, y2: target.y,
+            rank: i,
             score: hit.score,
-            hue: dateHue(neighborNode.date),
+            sentence: neighbor.sentence,
+            style_mode: neighbor.style_mode,
+            color: STYLE_COLOR[neighbor.style_mode] || DEFAULT_COLOR,
+            hovered: false,
           }
         })
 
-        const arcWidth = d3.scaleLinear()
-          .domain(ARC_WIDTH_DOMAIN).range(ARC_WIDTH_RANGE).clamp(true)
+        const arcs = wedgePie(wedgeData)
 
-        // Render arcs. Stroke color uses date-hue; thickness scales with score.
-        const arcSel = arcLayer.selectAll('line.arc').data(arcData, d => d.id)
-        arcSel.exit().remove()
-        const arcEnter = arcSel.enter()
-          .append('line')
-          .attr('class', 'arc')
-          .attr('stroke-linecap', 'round')
-          .attr('x1', d => d.x1).attr('y1', d => d.y1)
-          .attr('x2', d => d.x2).attr('y2', d => d.y2)
-          .attr('stroke', d => `hsl(${d.hue}, 65%, 55%)`)
-          .attr('stroke-width', d => arcWidth(d.score))
-          .attr('stroke-opacity', 0)
-        arcEnter.merge(arcSel)
-          .attr('stroke', d => `hsl(${d.hue}, 65%, 55%)`)
-          .attr('stroke-width', d => arcWidth(d.score))
+        // Wedge paths — keyed by neighbor id so re-applying with a new
+        // center doesn't blow away unaffected DOM.
+        const wedgeSel = wedgeLayer
+          .selectAll('path.wedge')
+          .data(arcs, d => d.data.id)
+        wedgeSel.exit().remove()
+        const wedgeEnter = wedgeSel.enter().append('path')
+          .attr('class', 'wedge')
+          .attr('stroke', 'none')
+          .style('cursor', 'pointer')
+          .style('pointer-events', 'all')
+        const wedgeMerged = wedgeEnter.merge(wedgeSel)
+          .attr('fill', d => d.data.color)
+        // Tween between previous d (if any) and the new one for smooth
+        // arc transitions when click → new center re-fires applyRadial.
+        wedgeMerged
           .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
-          .attr('x1', d => d.x1).attr('y1', d => d.y1)
-          .attr('x2', d => d.x2).attr('y2', d => d.y2)
-          .attr('stroke-opacity', 0.7)
+          .attrTween('d', function (d) {
+            const prev = this._prev || { startAngle: d.startAngle, endAngle: d.startAngle, padAngle: d.padAngle, data: d.data }
+            const interp = d3.interpolate(prev, d)
+            this._prev = d
+            return t => wedgeArc(interp(t))
+          })
 
-        arcLayer.transition().duration(TRANSITION_MS / 2).delay(TRANSITION_MS / 2)
-          .style('opacity', 1)
+        // Hover handlers — bump outer radius +20 and show neighbor
+        // sentence at the wedge midpoint. mouseleave restores.
+        wedgeMerged
+          .on('mouseenter', function (_event, d) {
+            d.data.hovered = true
+            d3.select(this).interrupt()
+              .transition().duration(160).ease(d3.easeCubicOut)
+              .attrTween('d', function (dd) {
+                const prev = this._prev || dd
+                const interp = d3.interpolate(prev, dd)
+                this._prev = dd
+                return t => wedgeArc(interp(t))
+              })
+            showWedgeLabel(d)
+          })
+          .on('mouseleave', function (_event, d) {
+            d.data.hovered = false
+            d3.select(this).interrupt()
+              .transition().duration(180).ease(d3.easeCubicInOut)
+              .attrTween('d', function (dd) {
+                const prev = this._prev || dd
+                const interp = d3.interpolate(prev, dd)
+                this._prev = dd
+                return t => wedgeArc(interp(t))
+              })
+            hideWedgeLabel()
+          })
+          .on('click', function (event, d) {
+            event.stopPropagation()
+            if (typeof onSelectRef.current === 'function') {
+              onSelectRef.current(d.data.id)
+            }
+          })
 
-        // (Center sentence text is rendered by the page-level HTML overlay,
-        // not by this canvas — see app/search/page.jsx.)
+        // Wedge hover label — first 6 words at the wedge's outer
+        // edge midpoint (outerRadius + 12px) along the mid-angle,
+        // rotated to follow the arc tangent. Bottom half (midangle
+        // in (π/2, 3π/2)) is flipped 180° so text never reads
+        // upside-down. One shared text element so it can't double-render.
+        let wedgeLabel = wedgeLayer.select('text.wedge-label')
+        if (wedgeLabel.empty()) {
+          wedgeLabel = wedgeLayer.append('text')
+            .attr('class', 'wedge-label')
+            .attr('font-family', 'monospace')
+            .attr('font-size', 11)
+            .attr('fill', '#ffffff')
+            .attr('text-anchor', 'middle')
+            .attr('dy', '0.32em')
+            .style('pointer-events', 'none')
+            .style('opacity', 0)
+        }
+        function showWedgeLabel(d) {
+          // d3.pie midangle: radians from 12 o'clock, clockwise.
+          const mid = (d.startAngle + d.endAngle) / 2
+          const baseOuter = d.data.rank < 3 ? WEDGE_INNER_OUTER_R : WEDGE_OUTER_OUTER_R
+          // Position 12px outboard of the wedge's resting outer edge
+          // (don't use the +HOVER_LIFT here — the label hugs the
+          // baseline arc, not the lifted hover edge, so wedge tween
+          // and label position don't fight each other).
+          const r = baseOuter + 12
+          const x = Math.sin(mid) * r
+          const y = -Math.cos(mid) * r
+          // Tangent rotation. SVG rotate(0) faces right; tangent at
+          // angle mid (from 12 o'clock CW) points in direction
+          // (mid * 180/π - 90)°. Standard D3 radial-label flip: on
+          // the left half of the circle (mid > π) add 180° so text
+          // reads left-to-right instead of upside-down.
+          let rotDeg = mid * 180 / Math.PI - 90
+          if (mid > Math.PI) rotDeg += 180
+          wedgeLabel
+            .attr('transform', `translate(${x},${y}) rotate(${rotDeg})`)
+            .text(firstWords(d.data.sentence, 6))
+            .style('opacity', 0.9)
+        }
+        function hideWedgeLabel() {
+          wedgeLabel.style('opacity', 0)
+        }
 
-        // Drop link/charge/center forces — all visible nodes are pinned.
-        // Keep collide so dragging a ring member doesn't punch through the
-        // center text region (collide acts on simNodes' actual r values).
+        // Reveal the wedge layer (no-op if already visible from prior
+        // applyRadial). On entry from corpus, fade in.
+        if (prevMode !== 'radial') {
+          wedgeLayer.style('opacity', 0)
+            .transition().duration(TRANSITION_MS).ease(d3.easeCubicInOut)
+            .style('opacity', 1)
+        } else {
+          wedgeLayer.style('opacity', 1)
+        }
+
+        // Park the simulation — radial mode reads frozen pinned
+        // positions but doesn't need any forces.
+        simNodes.forEach(d => { d.fx = d.x; d.fy = d.y })
         simulation
           .force('link', null)
           .force('charge', null)
           .force('center', null)
           .force('x', null)
           .force('y', null)
-          .force('collide', d3.forceCollide(d => d.r + 4).iterations(1))
-          .alpha(0.3).restart()
+          .force('collide', null)
+          .alpha(0).stop()
       }
     })()
 

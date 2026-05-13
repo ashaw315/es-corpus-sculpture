@@ -195,11 +195,14 @@ export default function SearchPage() {
   }, [])
 
   // Per-word renderable spans for the center sentence (Scale 2 only).
-  // Splits on whitespace to preserve punctuation, then makes content
-  // words clickable based on word-index membership.
+  // Truncated to 200 chars + ellipsis so the text fits inside the
+  // 240px-diameter inner void of the pie-arc radial. Splits on
+  // whitespace to preserve punctuation, then makes content words
+  // clickable based on word-index membership.
   const centerWordSpans = useMemo(() => {
     if (!selectedNode || !wordIndex) return null
-    const display = selectedNode.sentence
+    const full = selectedNode.sentence
+    const display = full.length > 200 ? full.slice(0, 200).trimEnd() + '…' : full
     return display.split(/(\s+)/).map((chunk, i) => {
       if (/^\s+$/.test(chunk)) return chunk
       const key = tokenKey(chunk)
@@ -302,21 +305,28 @@ export default function SearchPage() {
       </div>
 
       {/* Center-sentence HTML overlay — Scale 2 only. Per-word clickable
-          spans drive Scale 3 entry. */}
+          spans drive Scale 3 entry. The overlay is hard-clipped to a
+          230px circle (matching the pie-arc inner radius of 120 minus
+          a small padding) so long sentences can't bleed onto the
+          wedges. Text shrinks to 14px and truncates at 200 chars. */}
       {inRadial && centerWordSpans && (
         <div
           style={{
             position: 'fixed',
             top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 720, maxHeight: 320,
+            width: 230, height: 230,
+            borderRadius: '50%',
+            overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             textAlign: 'center',
             color: '#eee',
-            fontSize: 22,
+            fontSize: 14,
             lineHeight: 1.35,
             fontFamily: centerTreatment.family,
             fontStyle: centerTreatment.style,
+            padding: '0 12px',
+            boxSizing: 'border-box',
             pointerEvents: 'none', // wrapper passive; spans opt-in
             zIndex: 5,
             userSelect: 'none',
