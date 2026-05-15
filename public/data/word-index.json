@@ -335,7 +335,8 @@
     "runs-86",
     "runs-88",
     "runs-9",
-    "runs-92"
+    "runs-92",
+    "runs-95"
   ],
   "ochre": [
     "runs-60",
@@ -432,7 +433,8 @@
     "runs-58",
     "runs-60",
     "runs-76",
-    "runs-82"
+    "runs-82",
+    "runs-95"
   ],
   "kitchen": [
     "runs-46",
@@ -3096,7 +3098,8 @@
   ],
   "formation": [
     "runs-48",
-    "runs-92"
+    "runs-92",
+    "runs-95"
   ],
   "stretches": [
     "runs-2",
@@ -5641,6 +5644,9 @@
     "runs-95"
   ],
   "static": [
+    "runs-95"
+  ],
+  "specimen": [
     "runs-95"
   ]
 }
