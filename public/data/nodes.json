@@ -550,16 +550,6 @@
     "length": 411
   },
   {
-    "id": "runs-140",
-    "sentence": "A man sits at a bureaucratic desk in a flooded English road, his dissertation ruler dragging through muddy puddle-water as he measures margins that keep corrupting mid-stroke — his father's voice looping as a frozen subtitle, \"ENGLAND HAS 2000 [FILE NOT FOUND]\" — while the university's pre-born box flickers in color-banded error dialogs, progress bars at 99% for decades, his years of work pixelating into tire-spray and hex addresses nobody signed for. The scene is almost beautiful: 0xFF rain, a smeared man, a desk half-rendered in standing water, and a WARNING overlay dissolving into the puddle like it was always meant to.",
-    "title": null,
-    "date": "2026-06-18",
-    "mode": null,
-    "style_mode": "GLITCH/SYSTEM",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 630
-  },
-  {
     "id": "runs-137",
     "sentence": "Extreme close-up of a latex surface bloated with internal pressure, its blue skin gone chalky and micro-cracked at stress points where the curve pulls tightest, light catching the granular oxidation like frost on a bruise, the whole thing warm to the eye but structurally wrong — distended past what the material agreed to. Beneath it, a matte photographic surface gone amber-soft at the edges, the emulsion lifting in fine curled slivers where decades of shoebox pressure creased it, the image itself pilling like worn cotton, silver halides clustering into rough constellations where the gloss has surrendered completely to the weight of the dark.",
     "title": "Survey of Distended Membrane Oxidation and Emulsion Delamination Artifacts — TF-137-15",
@@ -568,5 +558,25 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 649
+  },
+  {
+    "id": "runs-142",
+    "sentence": "Peeling layers of adhesive collage paper curl away from a sun-warmed Dallas kitchen wall, their edges brittle and amber-yellowed, flecked with dried paint skin in the colors of someone else's palette. Beneath them, the plaster holds a rectangular ghost of cooler, untouched white — smooth where everything else is granular — sealed under a film of grease and undisturbed dust, dense and soft as felt.",
+    "title": null,
+    "date": "2026-06-19",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 400
+  },
+  {
+    "id": "runs-140",
+    "sentence": "A man sits at a bureaucratic desk in a flooded English road, his dissertation ruler dragging through muddy puddle-water as he measures margins that keep corrupting mid-stroke — his father's voice looping as a frozen subtitle, \"ENGLAND HAS 2000 [FILE NOT FOUND]\" — while the university's pre-born box flickers in color-banded error dialogs, progress bars at 99% for decades, his years of work pixelating into tire-spray and hex addresses nobody signed for. The scene is almost beautiful: 0xFF rain, a smeared man, a desk half-rendered in standing water, and a WARNING overlay dissolving into the puddle like it was always meant to.",
+    "title": "Catalogue of Undelivered Margins in Standing Bureaucratic Water — TF-140-09",
+    "date": "2026-06-18",
+    "mode": 4,
+    "style_mode": "GLITCH/SYSTEM",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 630
   }
 ]
