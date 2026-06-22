@@ -580,16 +580,6 @@
     "length": 400
   },
   {
-    "id": "runs-146",
-    "sentence": "I notice the image track contains content I can't engage with. I can work with the text fragment alone, or you're welcome to share a different image input.\n\n---\n\n**From the text fragment only:**\n\nExtreme close-up of a book's margins packed with dense graphite annotations pressed so hard the paper dimples and bruises translucent, the handwriting cramped and warm against yellowed pulp that smells visually of dried sweat and lamp heat. The spine is cracked and splayed outward like something forced open repeatedly, its glue gone amber and brittle, shedding flakes of adhesive like skin.",
-    "title": null,
-    "date": "2026-06-21",
-    "mode": null,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 588
-  },
-  {
     "id": "runs-144",
     "sentence": "A woman's body sits upright in a refrigerated shipping container labeled MIAMI 1996, her ring finger slightly indented where a gold band was recently removed, a half-eaten bag of weighed candy on the seat beside her. Outside the container door, a paper receipt from Chicago flutters against the dock, and someone has pressed a finger-heart shape into the condensation on the metal wall.",
     "title": "Inventory of Condensation Impressions and Depleted Candy Weights — TF-144-26",
@@ -598,5 +588,25 @@
     "style_mode": "REPRESENTATIONAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 386
+  },
+  {
+    "id": "runs-148",
+    "sentence": "Warm ochre and muted rust cycle through soft polygonal transitions, looping at irregular intervals that almost — but never quite — resolve into a recognizable rhythm, while a pale grid pulses faintly beneath, its lines drifting a half-step out of register each time they return. Dull amber bleeds leftward across the frame in slow, interrupted arcs, pausing mid-motion as though waiting for a signal that arrives late, then continues anyway, dimming gradually toward a gray that holds still longer than everything else.",
+    "title": null,
+    "date": "2026-06-22",
+    "mode": null,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 519
+  },
+  {
+    "id": "runs-146",
+    "sentence": "I notice the image track contains content I can't engage with. I can work with the text fragment alone, or you're welcome to share a different image input.\n\n---\n\n**From the text fragment only:**\n\nExtreme close-up of a book's margins packed with dense graphite annotations pressed so hard the paper dimples and bruises translucent, the handwriting cramped and warm against yellowed pulp that smells visually of dried sweat and lamp heat. The spine is cracked and splayed outward like something forced open repeatedly, its glue gone amber and brittle, shedding flakes of adhesive like skin.",
+    "title": "Residue of Graphite Pressure on Splayed Pulp Margins — TF-146-11",
+    "date": "2026-06-21",
+    "mode": 6,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 588
   }
 ]
