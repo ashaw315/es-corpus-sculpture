@@ -600,16 +600,6 @@
     "length": 588
   },
   {
-    "id": "runs-150",
-    "sentence": "A man in a 1956 work shirt moves slowly along a wire fence strung between rotting posts, pressing his thumb against each fencepost as if testing for ripeness, leaving dark bruise-shaped prints in the wood. At the far end of the row, a pile of objects — rusted tools, a broken lamp, a child's shoe — sit tagged with paper court summons that flutter in the wind, untouched, unrecorded.",
-    "title": null,
-    "date": "2026-06-23",
-    "mode": null,
-    "style_mode": "REPRESENTATIONAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 383
-  },
-  {
     "id": "runs-148",
     "sentence": "Warm ochre and muted rust cycle through soft polygonal transitions, looping at irregular intervals that almost — but never quite — resolve into a recognizable rhythm, while a pale grid pulses faintly beneath, its lines drifting a half-step out of register each time they return. Dull amber bleeds leftward across the frame in slow, interrupted arcs, pausing mid-motion as though waiting for a signal that arrives late, then continues anyway, dimming gradually toward a gray that holds still longer than everything else.",
     "title": "Trace of Unresolved Amber Arcs in Deregistered Grid Cycle — TF-148-12",
@@ -618,5 +608,25 @@
     "style_mode": "ABSTRACT",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 519
+  },
+  {
+    "id": "runs-152",
+    "sentence": "A woman mid-turn in a flickering DMV corridor holds a numbered ticket that's bending slowly into a copper elbow joint, her face caught between a smile and the instruction to stop, while the drop-ceiling tiles above her sag and press downward in wet clay. The fluorescent tube at the far end of the hall is casting light through a shape that is almost a figure — Roman, approximate, unfinished — standing in the numbered line where the hallway refuses to end.",
+    "title": null,
+    "date": "2026-06-24",
+    "mode": null,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 458
+  },
+  {
+    "id": "runs-150",
+    "sentence": "A man in a 1956 work shirt moves slowly along a wire fence strung between rotting posts, pressing his thumb against each fencepost as if testing for ripeness, leaving dark bruise-shaped prints in the wood. At the far end of the row, a pile of objects — rusted tools, a broken lamp, a child's shoe — sit tagged with paper court summons that flutter in the wind, untouched, unrecorded.",
+    "title": "Study for Bruise Impressions on Condemned Perimeter Fencing — TF-150-13",
+    "date": "2026-06-23",
+    "mode": 6,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 383
   }
 ]
