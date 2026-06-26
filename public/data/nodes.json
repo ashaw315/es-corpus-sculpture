@@ -540,6 +540,26 @@
     "length": 515
   },
   {
+    "id": "runs-156",
+    "sentence": "Pale green and cream drift laterally in slow parallel bands, interrupted by recurring vertical amber pulses that stutter and compress at uneven intervals. Hundreds of near-identical ochre points bloom and collapse in a grid formation, each one slightly offset in timing, generating a low interference shimmer across the whole field.",
+    "title": null,
+    "date": "2026-06-26",
+    "mode": null,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 332
+  },
+  {
+    "id": "runs-154",
+    "sentence": "A woman stands at a kitchen counter assembling a portable charcoal grill on top of stacked philosophy certificates, following a phone propped against a coffee mug, while children visible through a long corridor pass handwritten notes to each other about something she once taught them. The last bolt rolls off the counter and disappears, and she calls it done anyway, smoke curling up from the grill even though nothing is lit yet.",
+    "title": "Register of Unlit Smoke Over Stacked Credential Assemblies — TF-154-12",
+    "date": "2026-06-25",
+    "mode": 4,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 431
+  },
+  {
     "id": "runs-125",
     "sentence": "A translucent storage bin surface pulsates with warm, amber-tinted overflow residue that pools in geometric patterns, its scratched acrylic walls bearing the ghostly impressions of repeated mechanical stampings. The accumulated debris shifts like granular liquid mercury, each fragment catching harsh fluorescent light while leaving oily mathematical traces that streak down the container's fog-warmed interior.",
     "title": "Annotation on Amber-Tinted Geometric Pooling in Deaccessioned Acrylic Vessels — TF-125-27",
@@ -560,6 +580,16 @@
     "length": 649
   },
   {
+    "id": "runs-146",
+    "sentence": "I notice the image track contains content I can't engage with. I can work with the text fragment alone, or you're welcome to share a different image input.\n\n---\n\n**From the text fragment only:**\n\nExtreme close-up of a book's margins packed with dense graphite annotations pressed so hard the paper dimples and bruises translucent, the handwriting cramped and warm against yellowed pulp that smells visually of dried sweat and lamp heat. The spine is cracked and splayed outward like something forced open repeatedly, its glue gone amber and brittle, shedding flakes of adhesive like skin.",
+    "title": "Residue of Graphite Pressure on Splayed Pulp Margins — TF-146-11",
+    "date": "2026-06-21",
+    "mode": 6,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 588
+  },
+  {
     "id": "runs-140",
     "sentence": "A man sits at a bureaucratic desk in a flooded English road, his dissertation ruler dragging through muddy puddle-water as he measures margins that keep corrupting mid-stroke — his father's voice looping as a frozen subtitle, \"ENGLAND HAS 2000 [FILE NOT FOUND]\" — while the university's pre-born box flickers in color-banded error dialogs, progress bars at 99% for decades, his years of work pixelating into tire-spray and hex addresses nobody signed for. The scene is almost beautiful: 0xFF rain, a smeared man, a desk half-rendered in standing water, and a WARNING overlay dissolving into the puddle like it was always meant to.",
     "title": "Catalogue of Undelivered Margins in Standing Bureaucratic Water — TF-140-09",
@@ -568,16 +598,6 @@
     "style_mode": "GLITCH/SYSTEM",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 630
-  },
-  {
-    "id": "runs-142",
-    "sentence": "Peeling layers of adhesive collage paper curl away from a sun-warmed Dallas kitchen wall, their edges brittle and amber-yellowed, flecked with dried paint skin in the colors of someone else's palette. Beneath them, the plaster holds a rectangular ghost of cooler, untouched white — smooth where everything else is granular — sealed under a film of grease and undisturbed dust, dense and soft as felt.",
-    "title": "Dossier on Grease-Sealed Plaster Ghosts Beneath Amber Collage — TF-142-18",
-    "date": "2026-06-19",
-    "mode": 1,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 400
   },
   {
     "id": "runs-144",
@@ -590,16 +610,6 @@
     "length": 386
   },
   {
-    "id": "runs-146",
-    "sentence": "I notice the image track contains content I can't engage with. I can work with the text fragment alone, or you're welcome to share a different image input.\n\n---\n\n**From the text fragment only:**\n\nExtreme close-up of a book's margins packed with dense graphite annotations pressed so hard the paper dimples and bruises translucent, the handwriting cramped and warm against yellowed pulp that smells visually of dried sweat and lamp heat. The spine is cracked and splayed outward like something forced open repeatedly, its glue gone amber and brittle, shedding flakes of adhesive like skin.",
-    "title": "Residue of Graphite Pressure on Splayed Pulp Margins — TF-146-11",
-    "date": "2026-06-21",
-    "mode": 6,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 588
-  },
-  {
     "id": "runs-148",
     "sentence": "Warm ochre and muted rust cycle through soft polygonal transitions, looping at irregular intervals that almost — but never quite — resolve into a recognizable rhythm, while a pale grid pulses faintly beneath, its lines drifting a half-step out of register each time they return. Dull amber bleeds leftward across the frame in slow, interrupted arcs, pausing mid-motion as though waiting for a signal that arrives late, then continues anyway, dimming gradually toward a gray that holds still longer than everything else.",
     "title": "Trace of Unresolved Amber Arcs in Deregistered Grid Cycle — TF-148-12",
@@ -608,6 +618,16 @@
     "style_mode": "ABSTRACT",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 519
+  },
+  {
+    "id": "runs-152",
+    "sentence": "A woman mid-turn in a flickering DMV corridor holds a numbered ticket that's bending slowly into a copper elbow joint, her face caught between a smile and the instruction to stop, while the drop-ceiling tiles above her sag and press downward in wet clay. The fluorescent tube at the far end of the hall is casting light through a shape that is almost a figure — Roman, approximate, unfinished — standing in the numbered line where the hallway refuses to end.",
+    "title": "Fragment of Approximate Roman Figure in Sagging Bureaucratic Corridor — TF-152-13",
+    "date": "2026-06-24",
+    "mode": 2,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 458
   },
   {
     "id": "runs-150",
@@ -620,23 +640,13 @@
     "length": 383
   },
   {
-    "id": "runs-154",
-    "sentence": "A woman stands at a kitchen counter assembling a portable charcoal grill on top of stacked philosophy certificates, following a phone propped against a coffee mug, while children visible through a long corridor pass handwritten notes to each other about something she once taught them. The last bolt rolls off the counter and disappears, and she calls it done anyway, smoke curling up from the grill even though nothing is lit yet.",
-    "title": null,
-    "date": "2026-06-25",
-    "mode": null,
-    "style_mode": "REPRESENTATIONAL",
+    "id": "runs-142",
+    "sentence": "Peeling layers of adhesive collage paper curl away from a sun-warmed Dallas kitchen wall, their edges brittle and amber-yellowed, flecked with dried paint skin in the colors of someone else's palette. Beneath them, the plaster holds a rectangular ghost of cooler, untouched white — smooth where everything else is granular — sealed under a film of grease and undisturbed dust, dense and soft as felt.",
+    "title": "Dossier on Grease-Sealed Plaster Ghosts Beneath Amber Collage — TF-142-18",
+    "date": "2026-06-19",
+    "mode": 1,
+    "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 431
-  },
-  {
-    "id": "runs-152",
-    "sentence": "A woman mid-turn in a flickering DMV corridor holds a numbered ticket that's bending slowly into a copper elbow joint, her face caught between a smile and the instruction to stop, while the drop-ceiling tiles above her sag and press downward in wet clay. The fluorescent tube at the far end of the hall is casting light through a shape that is almost a figure — Roman, approximate, unfinished — standing in the numbered line where the hallway refuses to end.",
-    "title": "Fragment of Approximate Roman Figure in Sagging Bureaucratic Corridor — TF-152-13",
-    "date": "2026-06-24",
-    "mode": 2,
-    "style_mode": "LIMINAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 458
+    "length": 400
   }
 ]
