@@ -540,16 +540,6 @@
     "length": 515
   },
   {
-    "id": "runs-156",
-    "sentence": "Pale green and cream drift laterally in slow parallel bands, interrupted by recurring vertical amber pulses that stutter and compress at uneven intervals. Hundreds of near-identical ochre points bloom and collapse in a grid formation, each one slightly offset in timing, generating a low interference shimmer across the whole field.",
-    "title": null,
-    "date": "2026-06-26",
-    "mode": null,
-    "style_mode": "ABSTRACT",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 332
-  },
-  {
     "id": "runs-154",
     "sentence": "A woman stands at a kitchen counter assembling a portable charcoal grill on top of stacked philosophy certificates, following a phone propped against a coffee mug, while children visible through a long corridor pass handwritten notes to each other about something she once taught them. The last bolt rolls off the counter and disappears, and she calls it done anyway, smoke curling up from the grill even though nothing is lit yet.",
     "title": "Register of Unlit Smoke Over Stacked Credential Assemblies — TF-154-12",
@@ -648,5 +638,25 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 400
+  },
+  {
+    "id": "runs-158",
+    "sentence": "Extreme close-up of a plastic toy telephone receiver, its surface crazing into hairline fractures filled with yellowish dust, the mouthpiece holes clogged with a pale grey lint that has compacted and hardened over decades of undisturbed stillness. The handset rests against a shelf edge worn smooth by one body's repeated passage, its candy-red shell faded to a chalky coral on the upward face while the belly stays vivid, contact-warm against painted wood that has absorbed the ghost-pressure of its exact weight.",
+    "title": null,
+    "date": "2026-06-27",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 514
+  },
+  {
+    "id": "runs-156",
+    "sentence": "Pale green and cream drift laterally in slow parallel bands, interrupted by recurring vertical amber pulses that stutter and compress at uneven intervals. Hundreds of near-identical ochre points bloom and collapse in a grid formation, each one slightly offset in timing, generating a low interference shimmer across the whole field.",
+    "title": "Catalogue of Institutional Shimmer in Ochre Grid Displacement — TF-156-13",
+    "date": "2026-06-26",
+    "mode": 8,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 332
   }
 ]
