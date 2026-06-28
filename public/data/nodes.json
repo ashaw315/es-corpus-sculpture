@@ -640,16 +640,6 @@
     "length": 400
   },
   {
-    "id": "runs-158",
-    "sentence": "Extreme close-up of a plastic toy telephone receiver, its surface crazing into hairline fractures filled with yellowish dust, the mouthpiece holes clogged with a pale grey lint that has compacted and hardened over decades of undisturbed stillness. The handset rests against a shelf edge worn smooth by one body's repeated passage, its candy-red shell faded to a chalky coral on the upward face while the belly stays vivid, contact-warm against painted wood that has absorbed the ghost-pressure of its exact weight.",
-    "title": null,
-    "date": "2026-06-27",
-    "mode": null,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 514
-  },
-  {
     "id": "runs-156",
     "sentence": "Pale green and cream drift laterally in slow parallel bands, interrupted by recurring vertical amber pulses that stutter and compress at uneven intervals. Hundreds of near-identical ochre points bloom and collapse in a grid formation, each one slightly offset in timing, generating a low interference shimmer across the whole field.",
     "title": "Catalogue of Institutional Shimmer in Ochre Grid Displacement — TF-156-13",
@@ -658,5 +648,25 @@
     "style_mode": "ABSTRACT",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 332
+  },
+  {
+    "id": "runs-160",
+    "sentence": "Extreme close-up of a laminated calendar page pressed flat under institutional fluorescent warmth, its surface cross-hatched with binder-hole tears and a dried coffee ring that has oxidized to a deep amber crust at its rim, the ballpoint ink of a circled date slightly embossed and catching the light as a raised welt in the paper grain. The whole sheet carries a faint tackle of humidity from being face-down too long, its underside furred with microscopic lint transfer, the punched margins fraying into soft white threads that vibrate almost imperceptibly under the hum of something overhead.",
+    "title": null,
+    "date": "2026-06-28",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 595
+  },
+  {
+    "id": "runs-158",
+    "sentence": "Extreme close-up of a plastic toy telephone receiver, its surface crazing into hairline fractures filled with yellowish dust, the mouthpiece holes clogged with a pale grey lint that has compacted and hardened over decades of undisturbed stillness. The handset rests against a shelf edge worn smooth by one body's repeated passage, its candy-red shell faded to a chalky coral on the upward face while the belly stays vivid, contact-warm against painted wood that has absorbed the ghost-pressure of its exact weight.",
+    "title": "Dossier on Chalky Coral Handset and Compacted Lint Residuum — TF-158-25",
+    "date": "2026-06-27",
+    "mode": 3,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 514
   }
 ]
