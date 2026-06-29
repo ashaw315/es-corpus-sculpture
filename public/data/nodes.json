@@ -650,16 +650,6 @@
     "length": 332
   },
   {
-    "id": "runs-160",
-    "sentence": "Extreme close-up of a laminated calendar page pressed flat under institutional fluorescent warmth, its surface cross-hatched with binder-hole tears and a dried coffee ring that has oxidized to a deep amber crust at its rim, the ballpoint ink of a circled date slightly embossed and catching the light as a raised welt in the paper grain. The whole sheet carries a faint tackle of humidity from being face-down too long, its underside furred with microscopic lint transfer, the punched margins fraying into soft white threads that vibrate almost imperceptibly under the hum of something overhead.",
-    "title": null,
-    "date": "2026-06-28",
-    "mode": null,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 595
-  },
-  {
     "id": "runs-158",
     "sentence": "Extreme close-up of a plastic toy telephone receiver, its surface crazing into hairline fractures filled with yellowish dust, the mouthpiece holes clogged with a pale grey lint that has compacted and hardened over decades of undisturbed stillness. The handset rests against a shelf edge worn smooth by one body's repeated passage, its candy-red shell faded to a chalky coral on the upward face while the belly stays vivid, contact-warm against painted wood that has absorbed the ghost-pressure of its exact weight.",
     "title": "Dossier on Chalky Coral Handset and Compacted Lint Residuum — TF-158-25",
@@ -668,5 +658,25 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 514
+  },
+  {
+    "id": "runs-162",
+    "sentence": "A kitchen drawer filmed in extreme macro, its interior lacquered with a residue of dried pigment and butter-fat, bristle-ends pressed into wood grain alongside metal spatula edges that have worn pale channels into the painted surface, everything faintly warm and slightly sticky to the eye. Curled tape corners lift from a paper interior lining gone soft with humidity, the adhesive yellowed to amber and pulling micro-fibers of wood with it, while a faint smoke-smell seems to exist as a visual property of the resin-darkened corners — granular, carbonized, irreversibly dry.",
+    "title": null,
+    "date": "2026-06-29",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 576
+  },
+  {
+    "id": "runs-160",
+    "sentence": "Extreme close-up of a laminated calendar page pressed flat under institutional fluorescent warmth, its surface cross-hatched with binder-hole tears and a dried coffee ring that has oxidized to a deep amber crust at its rim, the ballpoint ink of a circled date slightly embossed and catching the light as a raised welt in the paper grain. The whole sheet carries a faint tackle of humidity from being face-down too long, its underside furred with microscopic lint transfer, the punched margins fraying into soft white threads that vibrate almost imperceptibly under the hum of something overhead.",
+    "title": "Inventory of Laminated Calendar Residuals With Oxidized Amber Crusting — TF-160-22",
+    "date": "2026-06-28",
+    "mode": 1,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 595
   }
 ]
