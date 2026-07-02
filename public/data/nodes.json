@@ -680,16 +680,6 @@
     "length": 576
   },
   {
-    "id": "runs-166",
-    "sentence": "Extreme close-up of a thick matte paper surface, slightly yellowed and body-warm, its fiber grain raised and compressed in asymmetric patterns where uneven pressure has been applied across its face — some zones dense and glazed from handling, others still soft and unresolved, holding a faint lateral curl along one edge like a slow exhale that never finished. The surface catches raking light across its micro-terrain of indent channels and passive ridges, each one a different temperature, the whole sheet granular and taut at its center but loose and breathing at its margins, as if something distributed and undecided has been pressed into it and left there.",
-    "title": null,
-    "date": "2026-07-01",
-    "mode": null,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 662
-  },
-  {
     "id": "runs-164",
     "sentence": "A fluorescent-lit copy room at 2 AM holds a single sheet of cardstock mid-curl in a printer tray, its surface printed with division notation that trails off before the remainder resolves, the digits ±n splitting at the edge of the paper into two columns that lead in opposite directions down an unfinished hallway. A cubicle monitor glows with a browser tab frozen at the fourth search result, the query field still blinking, while a folder icon labeled \"reference\" sits half-open on the desktop, its contents spilling sideways across the screen in a slow diagonal that has not stopped moving for eight months.",
     "title": "Trace of Unresolved Division Notation in Fluorescent Copy Room — TF-164-27",
@@ -698,5 +688,25 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 610
+  },
+  {
+    "id": "runs-168",
+    "sentence": "Extreme close-up of a blueprint paper gone soft with handling — the penciled wrench outlines smeared at every edge where fingers pressed and re-pressed, the surface faintly warm and scaled in texture like something shed, with small oval indentations pressed into the drafting vellum where knuckles rested in careful, repeated contact. The paper has gone translucent at its fold lines, faintly iridescent where oils have soaked through, and a thin ridge of grit — parking lot gravel dust, fine as talc — runs along the bottom margin in a line that suggests the sheet was set down on rough concrete and lifted again, quickly, before anyone saw.",
+    "title": null,
+    "date": "2026-07-02",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 642
+  },
+  {
+    "id": "runs-166",
+    "sentence": "Extreme close-up of a thick matte paper surface, slightly yellowed and body-warm, its fiber grain raised and compressed in asymmetric patterns where uneven pressure has been applied across its face — some zones dense and glazed from handling, others still soft and unresolved, holding a faint lateral curl along one edge like a slow exhale that never finished. The surface catches raking light across its micro-terrain of indent channels and passive ridges, each one a different temperature, the whole sheet granular and taut at its center but loose and breathing at its margins, as if something distributed and undecided has been pressed into it and left there.",
+    "title": "Study of Distributed Pressure Indices on Yellowed Fiber Terrain — TF-166-18",
+    "date": "2026-07-01",
+    "mode": 5,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 662
   }
 ]
