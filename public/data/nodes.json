@@ -700,16 +700,6 @@
     "length": 662
   },
   {
-    "id": "runs-170",
-    "sentence": "Extreme close-up of a laminated asphalt surface, its black binder cracked into irregular polygons, each fissure filled with a pale mineral crust that catches flat fluorescent light — the whole field slightly warm to the eye, radiating a dull stored heat that reads as neither day nor night. Pressed into one quadrant: the ghost of a printed grid, ink half-transferred from paper to tar, numbers barely legible under a compression crease where something soft once rested its full weight and stayed.",
-    "title": null,
-    "date": "2026-07-03",
-    "mode": null,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 497
-  },
-  {
     "id": "runs-168",
     "sentence": "Extreme close-up of a blueprint paper gone soft with handling — the penciled wrench outlines smeared at every edge where fingers pressed and re-pressed, the surface faintly warm and scaled in texture like something shed, with small oval indentations pressed into the drafting vellum where knuckles rested in careful, repeated contact. The paper has gone translucent at its fold lines, faintly iridescent where oils have soaked through, and a thin ridge of grit — parking lot gravel dust, fine as talc — runs along the bottom margin in a line that suggests the sheet was set down on rough concrete and lifted again, quickly, before anyone saw.",
     "title": "Fragment of Shed Vellum with Knuckle Indentations — TF-168-21",
@@ -718,5 +708,25 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 642
+  },
+  {
+    "id": "runs-172",
+    "sentence": "Pale ochre rectangles descend at measured intervals through a field of blue-grey, their edges softening where they overlap into a muted, procedural interference — each layer shifting laterally by a fixed increment before settling. A warm white flicker pulses at low frequency across the surface, brightening in slow diagonal bands that cross the descending forms and fade without resolution, leaving the color field slightly warmer than it began.",
+    "title": null,
+    "date": "2026-07-04",
+    "mode": null,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 446
+  },
+  {
+    "id": "runs-170",
+    "sentence": "Extreme close-up of a laminated asphalt surface, its black binder cracked into irregular polygons, each fissure filled with a pale mineral crust that catches flat fluorescent light — the whole field slightly warm to the eye, radiating a dull stored heat that reads as neither day nor night. Pressed into one quadrant: the ghost of a printed grid, ink half-transferred from paper to tar, numbers barely legible under a compression crease where something soft once rested its full weight and stayed.",
+    "title": "Register of Residual Grid Impressions on Thermally Charged Bitumen — TF-170-23",
+    "date": "2026-07-03",
+    "mode": 5,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 497
   }
 ]
