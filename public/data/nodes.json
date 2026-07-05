@@ -640,44 +640,24 @@
     "length": 400
   },
   {
-    "id": "runs-156",
-    "sentence": "Pale green and cream drift laterally in slow parallel bands, interrupted by recurring vertical amber pulses that stutter and compress at uneven intervals. Hundreds of near-identical ochre points bloom and collapse in a grid formation, each one slightly offset in timing, generating a low interference shimmer across the whole field.",
-    "title": "Catalogue of Institutional Shimmer in Ochre Grid Displacement — TF-156-13",
-    "date": "2026-06-26",
+    "id": "runs-174",
+    "sentence": "Slow-rolling columns of basalt grey and brine-pale white drift laterally across the frame while neon magenta interference lines pulse at irregular intervals, brightening then failing to reflect, cycling through a rhythm that almost stabilizes before collapsing into horizontal static. Matte black rectangles accumulate at the bottom edge in stacked layers, their upper borders creased with a single diagonal fold of cooler grey that bisects the composition at the 17th unit of measure, while the remaining surface holds four faint vertical marks, two of which gradually fade to the background color and disappear.",
+    "title": null,
+    "date": "2026-07-05",
+    "mode": null,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 613
+  },
+  {
+    "id": "runs-172",
+    "sentence": "Pale ochre rectangles descend at measured intervals through a field of blue-grey, their edges softening where they overlap into a muted, procedural interference — each layer shifting laterally by a fixed increment before settling. A warm white flicker pulses at low frequency across the surface, brightening in slow diagonal bands that cross the descending forms and fade without resolution, leaving the color field slightly warmer than it began.",
+    "title": "Catalogue of Procedural Interference in Descending Ochre Laminae — TF-172-17",
+    "date": "2026-07-04",
     "mode": 8,
     "style_mode": "ABSTRACT",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 332
-  },
-  {
-    "id": "runs-158",
-    "sentence": "Extreme close-up of a plastic toy telephone receiver, its surface crazing into hairline fractures filled with yellowish dust, the mouthpiece holes clogged with a pale grey lint that has compacted and hardened over decades of undisturbed stillness. The handset rests against a shelf edge worn smooth by one body's repeated passage, its candy-red shell faded to a chalky coral on the upward face while the belly stays vivid, contact-warm against painted wood that has absorbed the ghost-pressure of its exact weight.",
-    "title": "Dossier on Chalky Coral Handset and Compacted Lint Residuum — TF-158-25",
-    "date": "2026-06-27",
-    "mode": 3,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 514
-  },
-  {
-    "id": "runs-160",
-    "sentence": "Extreme close-up of a laminated calendar page pressed flat under institutional fluorescent warmth, its surface cross-hatched with binder-hole tears and a dried coffee ring that has oxidized to a deep amber crust at its rim, the ballpoint ink of a circled date slightly embossed and catching the light as a raised welt in the paper grain. The whole sheet carries a faint tackle of humidity from being face-down too long, its underside furred with microscopic lint transfer, the punched margins fraying into soft white threads that vibrate almost imperceptibly under the hum of something overhead.",
-    "title": "Inventory of Laminated Calendar Residuals With Oxidized Amber Crusting — TF-160-22",
-    "date": "2026-06-28",
-    "mode": 1,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 595
-  },
-  {
-    "id": "runs-162",
-    "sentence": "A kitchen drawer filmed in extreme macro, its interior lacquered with a residue of dried pigment and butter-fat, bristle-ends pressed into wood grain alongside metal spatula edges that have worn pale channels into the painted surface, everything faintly warm and slightly sticky to the eye. Curled tape corners lift from a paper interior lining gone soft with humidity, the adhesive yellowed to amber and pulling micro-fibers of wood with it, while a faint smoke-smell seems to exist as a visual property of the resin-darkened corners — granular, carbonized, irreversibly dry.",
-    "title": "Residue of Butter-Fat and Carbonized Resin in Drawer Channels — TF-162-28",
-    "date": "2026-06-29",
-    "mode": 9,
-    "style_mode": "SENSORY/TEXTURAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 576
+    "length": 446
   },
   {
     "id": "runs-164",
@@ -700,6 +680,36 @@
     "length": 662
   },
   {
+    "id": "runs-162",
+    "sentence": "A kitchen drawer filmed in extreme macro, its interior lacquered with a residue of dried pigment and butter-fat, bristle-ends pressed into wood grain alongside metal spatula edges that have worn pale channels into the painted surface, everything faintly warm and slightly sticky to the eye. Curled tape corners lift from a paper interior lining gone soft with humidity, the adhesive yellowed to amber and pulling micro-fibers of wood with it, while a faint smoke-smell seems to exist as a visual property of the resin-darkened corners — granular, carbonized, irreversibly dry.",
+    "title": "Residue of Butter-Fat and Carbonized Resin in Drawer Channels — TF-162-28",
+    "date": "2026-06-29",
+    "mode": 9,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 576
+  },
+  {
+    "id": "runs-160",
+    "sentence": "Extreme close-up of a laminated calendar page pressed flat under institutional fluorescent warmth, its surface cross-hatched with binder-hole tears and a dried coffee ring that has oxidized to a deep amber crust at its rim, the ballpoint ink of a circled date slightly embossed and catching the light as a raised welt in the paper grain. The whole sheet carries a faint tackle of humidity from being face-down too long, its underside furred with microscopic lint transfer, the punched margins fraying into soft white threads that vibrate almost imperceptibly under the hum of something overhead.",
+    "title": "Inventory of Laminated Calendar Residuals With Oxidized Amber Crusting — TF-160-22",
+    "date": "2026-06-28",
+    "mode": 1,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 595
+  },
+  {
+    "id": "runs-158",
+    "sentence": "Extreme close-up of a plastic toy telephone receiver, its surface crazing into hairline fractures filled with yellowish dust, the mouthpiece holes clogged with a pale grey lint that has compacted and hardened over decades of undisturbed stillness. The handset rests against a shelf edge worn smooth by one body's repeated passage, its candy-red shell faded to a chalky coral on the upward face while the belly stays vivid, contact-warm against painted wood that has absorbed the ghost-pressure of its exact weight.",
+    "title": "Dossier on Chalky Coral Handset and Compacted Lint Residuum — TF-158-25",
+    "date": "2026-06-27",
+    "mode": 3,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 514
+  },
+  {
     "id": "runs-168",
     "sentence": "Extreme close-up of a blueprint paper gone soft with handling — the penciled wrench outlines smeared at every edge where fingers pressed and re-pressed, the surface faintly warm and scaled in texture like something shed, with small oval indentations pressed into the drafting vellum where knuckles rested in careful, repeated contact. The paper has gone translucent at its fold lines, faintly iridescent where oils have soaked through, and a thin ridge of grit — parking lot gravel dust, fine as talc — runs along the bottom margin in a line that suggests the sheet was set down on rough concrete and lifted again, quickly, before anyone saw.",
     "title": "Fragment of Shed Vellum with Knuckle Indentations — TF-168-21",
@@ -710,16 +720,6 @@
     "length": 642
   },
   {
-    "id": "runs-172",
-    "sentence": "Pale ochre rectangles descend at measured intervals through a field of blue-grey, their edges softening where they overlap into a muted, procedural interference — each layer shifting laterally by a fixed increment before settling. A warm white flicker pulses at low frequency across the surface, brightening in slow diagonal bands that cross the descending forms and fade without resolution, leaving the color field slightly warmer than it began.",
-    "title": null,
-    "date": "2026-07-04",
-    "mode": null,
-    "style_mode": "ABSTRACT",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 446
-  },
-  {
     "id": "runs-170",
     "sentence": "Extreme close-up of a laminated asphalt surface, its black binder cracked into irregular polygons, each fissure filled with a pale mineral crust that catches flat fluorescent light — the whole field slightly warm to the eye, radiating a dull stored heat that reads as neither day nor night. Pressed into one quadrant: the ghost of a printed grid, ink half-transferred from paper to tar, numbers barely legible under a compression crease where something soft once rested its full weight and stayed.",
     "title": "Register of Residual Grid Impressions on Thermally Charged Bitumen — TF-170-23",
@@ -728,5 +728,15 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 497
+  },
+  {
+    "id": "runs-156",
+    "sentence": "Pale green and cream drift laterally in slow parallel bands, interrupted by recurring vertical amber pulses that stutter and compress at uneven intervals. Hundreds of near-identical ochre points bloom and collapse in a grid formation, each one slightly offset in timing, generating a low interference shimmer across the whole field.",
+    "title": "Catalogue of Institutional Shimmer in Ochre Grid Displacement — TF-156-13",
+    "date": "2026-06-26",
+    "mode": 8,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 332
   }
 ]
