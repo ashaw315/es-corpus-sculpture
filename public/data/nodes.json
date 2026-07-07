@@ -730,16 +730,6 @@
     "length": 332
   },
   {
-    "id": "runs-176",
-    "sentence": "**GENERATION PROMPT:**\n\nA fluorescent-lit corridor mid-flicker stretches between two doorways that are both simultaneously opening and closing, the walls hand-inked in flat animation cels that haven't fully registered their own colors yet, saturated hues bleeding half a centimeter outside their outlines. A figure — or the scaffolding where a figure was being constructed — moves at three-quarter speed toward the far door, carrying the weight of a scene that hasn't loaded its ending.",
-    "title": null,
-    "date": "2026-07-06",
-    "mode": null,
-    "style_mode": "LIMINAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 486
-  },
-  {
     "id": "runs-174",
     "sentence": "Slow-rolling columns of basalt grey and brine-pale white drift laterally across the frame while neon magenta interference lines pulse at irregular intervals, brightening then failing to reflect, cycling through a rhythm that almost stabilizes before collapsing into horizontal static. Matte black rectangles accumulate at the bottom edge in stacked layers, their upper borders creased with a single diagonal fold of cooler grey that bisects the composition at the 17th unit of measure, while the remaining surface holds four faint vertical marks, two of which gradually fade to the background color and disappear.",
     "title": "Dossier on Lateral Basalt Drift and Collapsed Horizontal Strata — TF-174-32",
@@ -748,5 +738,25 @@
     "style_mode": "ABSTRACT",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 613
+  },
+  {
+    "id": "runs-178",
+    "sentence": "A dermatologist in a half-lit subway entrance slides slowly beneath a wooden pallet, coins still spinning mid-arc through fluorescent air toward a turnstile that never clicks shut. Outside, through a glass panel fogged with transit breath, a park in pale Swiss light absorbs the last of the money into its grass, neither spent nor returned, as the doors hold themselves permanently at three inches open.",
+    "title": null,
+    "date": "2026-07-07",
+    "mode": null,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 403
+  },
+  {
+    "id": "runs-176",
+    "sentence": "**GENERATION PROMPT:**\n\nA fluorescent-lit corridor mid-flicker stretches between two doorways that are both simultaneously opening and closing, the walls hand-inked in flat animation cels that haven't fully registered their own colors yet, saturated hues bleeding half a centimeter outside their outlines. A figure — or the scaffolding where a figure was being constructed — moves at three-quarter speed toward the far door, carrying the weight of a scene that hasn't loaded its ending.",
+    "title": "Inventory of Unregistered Hues in Mid-Flicker Corridor Scaffolding — TF-176-09",
+    "date": "2026-07-06",
+    "mode": 2,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 486
   }
 ]
