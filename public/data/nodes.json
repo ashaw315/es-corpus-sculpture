@@ -740,16 +740,6 @@
     "length": 613
   },
   {
-    "id": "runs-178",
-    "sentence": "A dermatologist in a half-lit subway entrance slides slowly beneath a wooden pallet, coins still spinning mid-arc through fluorescent air toward a turnstile that never clicks shut. Outside, through a glass panel fogged with transit breath, a park in pale Swiss light absorbs the last of the money into its grass, neither spent nor returned, as the doors hold themselves permanently at three inches open.",
-    "title": null,
-    "date": "2026-07-07",
-    "mode": null,
-    "style_mode": "LIMINAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 403
-  },
-  {
     "id": "runs-176",
     "sentence": "**GENERATION PROMPT:**\n\nA fluorescent-lit corridor mid-flicker stretches between two doorways that are both simultaneously opening and closing, the walls hand-inked in flat animation cels that haven't fully registered their own colors yet, saturated hues bleeding half a centimeter outside their outlines. A figure — or the scaffolding where a figure was being constructed — moves at three-quarter speed toward the far door, carrying the weight of a scene that hasn't loaded its ending.",
     "title": "Inventory of Unregistered Hues in Mid-Flicker Corridor Scaffolding — TF-176-09",
@@ -758,5 +748,25 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 486
+  },
+  {
+    "id": "runs-180",
+    "sentence": "Extreme close-up of a blister pack strip pressed flat against newsprint ink, the foil backing heat-warped and bubbling where repeated thumb pressure has pushed through empty pockets, leaving circular depressions that catch fluorescent light in cold silver rings, the remaining tablets casting faint yellow warmth through translucent plastic domes above text that prints and reprints beneath them in smeared repetition. The cardboard beneath is soft at the edges from humidity and handling, its surface fibrous where the pharmacy label has been partially peeled, leaving a sticky stratum of adhesive now grey with lint and finger oils, the whole thing faintly warm, faintly chemical, the empty cells reading like a calendar someone stopped keeping.",
+    "title": null,
+    "date": "2026-07-08",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 747
+  },
+  {
+    "id": "runs-178",
+    "sentence": "A dermatologist in a half-lit subway entrance slides slowly beneath a wooden pallet, coins still spinning mid-arc through fluorescent air toward a turnstile that never clicks shut. Outside, through a glass panel fogged with transit breath, a park in pale Swiss light absorbs the last of the money into its grass, neither spent nor returned, as the doors hold themselves permanently at three inches open.",
+    "title": "Residue of Unreturned Fare in Fluorescent Dermatological Transit — TF-178-31",
+    "date": "2026-07-07",
+    "mode": 3,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 403
   }
 ]
