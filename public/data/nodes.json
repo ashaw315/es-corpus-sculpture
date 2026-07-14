@@ -730,34 +730,24 @@
     "length": 332
   },
   {
-    "id": "runs-174",
-    "sentence": "Slow-rolling columns of basalt grey and brine-pale white drift laterally across the frame while neon magenta interference lines pulse at irregular intervals, brightening then failing to reflect, cycling through a rhythm that almost stabilizes before collapsing into horizontal static. Matte black rectangles accumulate at the bottom edge in stacked layers, their upper borders creased with a single diagonal fold of cooler grey that bisects the composition at the 17th unit of measure, while the remaining surface holds four faint vertical marks, two of which gradually fade to the background color and disappear.",
-    "title": "Dossier on Lateral Basalt Drift and Collapsed Horizontal Strata — TF-174-32",
-    "date": "2026-07-05",
-    "mode": 1,
+    "id": "runs-192",
+    "sentence": "Bilateral gray gradients pulse outward from a central rust-orange smear, the saturation bleeding in slow lateral waves that stall at irregular vertical seams before reversing. Geometric cutouts — ash-white rectangles drifting at misaligned speeds — pass through one another without merging, leaving faint yellow-brown interference bands that accumulate along the edges and do not dissolve.",
+    "title": null,
+    "date": "2026-07-14",
+    "mode": null,
     "style_mode": "ABSTRACT",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 613
+    "length": 389
   },
   {
-    "id": "runs-176",
-    "sentence": "**GENERATION PROMPT:**\n\nA fluorescent-lit corridor mid-flicker stretches between two doorways that are both simultaneously opening and closing, the walls hand-inked in flat animation cels that haven't fully registered their own colors yet, saturated hues bleeding half a centimeter outside their outlines. A figure — or the scaffolding where a figure was being constructed — moves at three-quarter speed toward the far door, carrying the weight of a scene that hasn't loaded its ending.",
-    "title": "Inventory of Unregistered Hues in Mid-Flicker Corridor Scaffolding — TF-176-09",
-    "date": "2026-07-06",
-    "mode": 2,
-    "style_mode": "LIMINAL",
+    "id": "runs-190",
+    "sentence": "Pale gold and iron-red columns pulse in slow alternation, neither advancing nor receding, separated by intervals of gray-white that widen and compress on a rhythm slightly too slow to predict. A dull orange warmth accumulates at the center of each interval, holds for several seconds, then disperses laterally without completing its motion, leaving a faint residue that the next pulse half-covers and half-ignores.",
+    "title": "Dossier on Incomplete Thermal Dispersal in Midweek Columnar Intervals — TF-190-27",
+    "date": "2026-07-13",
+    "mode": 9,
+    "style_mode": "ABSTRACT",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 486
-  },
-  {
-    "id": "runs-178",
-    "sentence": "A dermatologist in a half-lit subway entrance slides slowly beneath a wooden pallet, coins still spinning mid-arc through fluorescent air toward a turnstile that never clicks shut. Outside, through a glass panel fogged with transit breath, a park in pale Swiss light absorbs the last of the money into its grass, neither spent nor returned, as the doors hold themselves permanently at three inches open.",
-    "title": "Residue of Unreturned Fare in Fluorescent Dermatological Transit — TF-178-31",
-    "date": "2026-07-07",
-    "mode": 3,
-    "style_mode": "LIMINAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 403
+    "length": 414
   },
   {
     "id": "runs-180",
@@ -768,6 +758,16 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 747
+  },
+  {
+    "id": "runs-178",
+    "sentence": "A dermatologist in a half-lit subway entrance slides slowly beneath a wooden pallet, coins still spinning mid-arc through fluorescent air toward a turnstile that never clicks shut. Outside, through a glass panel fogged with transit breath, a park in pale Swiss light absorbs the last of the money into its grass, neither spent nor returned, as the doors hold themselves permanently at three inches open.",
+    "title": "Residue of Unreturned Fare in Fluorescent Dermatological Transit — TF-178-31",
+    "date": "2026-07-07",
+    "mode": 3,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 403
   },
   {
     "id": "runs-182",
@@ -790,6 +790,16 @@
     "length": 725
   },
   {
+    "id": "runs-174",
+    "sentence": "Slow-rolling columns of basalt grey and brine-pale white drift laterally across the frame while neon magenta interference lines pulse at irregular intervals, brightening then failing to reflect, cycling through a rhythm that almost stabilizes before collapsing into horizontal static. Matte black rectangles accumulate at the bottom edge in stacked layers, their upper borders creased with a single diagonal fold of cooler grey that bisects the composition at the 17th unit of measure, while the remaining surface holds four faint vertical marks, two of which gradually fade to the background color and disappear.",
+    "title": "Dossier on Lateral Basalt Drift and Collapsed Horizontal Strata — TF-174-32",
+    "date": "2026-07-05",
+    "mode": 1,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 613
+  },
+  {
     "id": "runs-186",
     "sentence": "A parking lot at dusk where the asphalt holds faint impressions of dress shoes mid-stride, surrounded by letters stenciled onto the ground so worn they have become pure shape, grooves without meaning. A velvet rope hangs half-unclipped across a corridor that leads to another corridor, and somewhere in the middle distance a hand is caught open, mid-explanation, the fingers neither closing nor releasing.",
     "title": "Register of Worn Stencil Grooves and Suspended Gestural Corridors — TF-186-22",
@@ -800,16 +810,6 @@
     "length": 405
   },
   {
-    "id": "runs-190",
-    "sentence": "Pale gold and iron-red columns pulse in slow alternation, neither advancing nor receding, separated by intervals of gray-white that widen and compress on a rhythm slightly too slow to predict. A dull orange warmth accumulates at the center of each interval, holds for several seconds, then disperses laterally without completing its motion, leaving a faint residue that the next pulse half-covers and half-ignores.",
-    "title": null,
-    "date": "2026-07-13",
-    "mode": null,
-    "style_mode": "ABSTRACT",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 414
-  },
-  {
     "id": "runs-188",
     "sentence": "A fluorescent-lit office hallway mid-afternoon, one cubicle visible through a glass partition with something scissor-cut and taped to its inner wall just out of readable angle, a wheeled cart of paper slowly rolling unprompted past the open door. The carpet shows a worn track between the break room and the copier, a styrofoam cup half-abandoned on the windowsill, and somewhere behind the drop ceiling a process is already running that no one has yet described the purpose of.",
     "title": "Catalogue of Undescribed Processes Above the Drop Ceiling — TF-188-25",
@@ -818,5 +818,15 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 478
+  },
+  {
+    "id": "runs-176",
+    "sentence": "**GENERATION PROMPT:**\n\nA fluorescent-lit corridor mid-flicker stretches between two doorways that are both simultaneously opening and closing, the walls hand-inked in flat animation cels that haven't fully registered their own colors yet, saturated hues bleeding half a centimeter outside their outlines. A figure — or the scaffolding where a figure was being constructed — moves at three-quarter speed toward the far door, carrying the weight of a scene that hasn't loaded its ending.",
+    "title": "Inventory of Unregistered Hues in Mid-Flicker Corridor Scaffolding — TF-176-09",
+    "date": "2026-07-06",
+    "mode": 2,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 486
   }
 ]
