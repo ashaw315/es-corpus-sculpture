@@ -730,16 +730,6 @@
     "length": 332
   },
   {
-    "id": "runs-192",
-    "sentence": "Bilateral gray gradients pulse outward from a central rust-orange smear, the saturation bleeding in slow lateral waves that stall at irregular vertical seams before reversing. Geometric cutouts — ash-white rectangles drifting at misaligned speeds — pass through one another without merging, leaving faint yellow-brown interference bands that accumulate along the edges and do not dissolve.",
-    "title": null,
-    "date": "2026-07-14",
-    "mode": null,
-    "style_mode": "ABSTRACT",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 389
-  },
-  {
     "id": "runs-190",
     "sentence": "Pale gold and iron-red columns pulse in slow alternation, neither advancing nor receding, separated by intervals of gray-white that widen and compress on a rhythm slightly too slow to predict. A dull orange warmth accumulates at the center of each interval, holds for several seconds, then disperses laterally without completing its motion, leaving a faint residue that the next pulse half-covers and half-ignores.",
     "title": "Dossier on Incomplete Thermal Dispersal in Midweek Columnar Intervals — TF-190-27",
@@ -828,5 +818,25 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 486
+  },
+  {
+    "id": "runs-194",
+    "sentence": "A man named Buchloh sits in a white-walled bank branch holding a brush with stiff mineral-crusted bristles, filling out a form face-down on his knee while footsteps approach down a corridor made entirely of compacted concrete, the walls close enough to taste. He has written an invented name in the first field and paused mid-letter, and no one passing will ask him what he is applying for because the form is already, technically, complete.",
+    "title": null,
+    "date": "2026-07-15",
+    "mode": null,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 441
+  },
+  {
+    "id": "runs-192",
+    "sentence": "Bilateral gray gradients pulse outward from a central rust-orange smear, the saturation bleeding in slow lateral waves that stall at irregular vertical seams before reversing. Geometric cutouts — ash-white rectangles drifting at misaligned speeds — pass through one another without merging, leaving faint yellow-brown interference bands that accumulate along the edges and do not dissolve.",
+    "title": "Inventory of Lateral Interference Bands Across Misaligned Ash Rectangles — TF-192-13",
+    "date": "2026-07-14",
+    "mode": 0,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 389
   }
 ]
