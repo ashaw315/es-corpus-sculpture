@@ -830,16 +830,6 @@
     "length": 389
   },
   {
-    "id": "runs-196",
-    "sentence": "Fifty-eight thin vertical bands of muted amber and grey pulse outward from a soft center in slow, uneven intervals — some bands arriving slightly early, some late, none synchronized. A pale wedge-shaped absence rotates at the edge of the composition while warm ochre bleeds incrementally into cooler blue-green at the perimeter, the whole field dimming by one degree every several seconds without ever going dark.",
-    "title": null,
-    "date": "2026-07-16",
-    "mode": null,
-    "style_mode": "ABSTRACT",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 413
-  },
-  {
     "id": "runs-194",
     "sentence": "A man named Buchloh sits in a white-walled bank branch holding a brush with stiff mineral-crusted bristles, filling out a form face-down on his knee while footsteps approach down a corridor made entirely of compacted concrete, the walls close enough to taste. He has written an invented name in the first field and paused mid-letter, and no one passing will ask him what he is applying for because the form is already, technically, complete.",
     "title": "Residue of Mineral-Crusted Bristles on a Completed Application — TF-194-30",
@@ -848,5 +838,35 @@
     "style_mode": "REPRESENTATIONAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 441
+  },
+  {
+    "id": "runs-196",
+    "sentence": "Fifty-eight thin vertical bands of muted amber and grey pulse outward from a soft center in slow, uneven intervals — some bands arriving slightly early, some late, none synchronized. A pale wedge-shaped absence rotates at the edge of the composition while warm ochre bleeds incrementally into cooler blue-green at the perimeter, the whole field dimming by one degree every several seconds without ever going dark.",
+    "title": "Trace of Fifty-Eight Asynchronous Bands With Rotating Pale Absence — TF-196-27",
+    "date": "2026-07-16",
+    "mode": 7,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 413
+  },
+  {
+    "id": "runs-200",
+    "sentence": "A man in a striped coat stands motionless in a hospital corridor that opens onto a parking lot, the fluorescent light strobing at the frequency of an unread notification, while somewhere behind him two cars idle with their windows down, someone's hand still holding a phone displaying a fabric swatch nobody will confirm. The stripes on his coat are either painted or stitched and he is moving toward a set of double doors that are always mid-swing, a folded slip of paper half-tucked at his collar, a receipt curling in his breast pocket next to a pen that almost works.",
+    "title": null,
+    "date": "2026-07-18",
+    "mode": null,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 571
+  },
+  {
+    "id": "runs-198",
+    "sentence": "Pale grey rectangles drift toward a warm ochre center in slow lateral pulses, stacking and unstacking in pairs that nearly but never fully align, their edges softening where they overlap into a faint yellowed cream. Small dark numerals bloom at irregular intervals along the midline, vibrating slightly before dissolving into the surrounding field, pulled left or right by a rhythm that repeats almost identically each time but never exactly.",
+    "title": "Study of Misaligned Numerals in Lateral Ochre Drift Fields — TF-198-14",
+    "date": "2026-07-17",
+    "mode": 3,
+    "style_mode": "ABSTRACT",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 442
   }
 ]
