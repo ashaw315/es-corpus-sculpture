@@ -860,16 +860,6 @@
     "length": 442
   },
   {
-    "id": "runs-202",
-    "sentence": "A man in a half-unbuttoned funeral shirt walks a fluorescent corridor between kennels and exhibits, dragging one hand along a wall someone built and abandoned, leaving a long smear at shoulder height that could be chalk or could be light. The kennel doors on his left hang half-latched, clicking softly as he passes, while ahead a museum doorway stands open onto a parking lot where a riding mower circles something in the asphalt, at dusk, indefinitely.",
-    "title": null,
-    "date": "2026-07-19",
-    "mode": null,
-    "style_mode": "LIMINAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 454
-  },
-  {
     "id": "runs-200",
     "sentence": "A man in a striped coat stands motionless in a hospital corridor that opens onto a parking lot, the fluorescent light strobing at the frequency of an unread notification, while somewhere behind him two cars idle with their windows down, someone's hand still holding a phone displaying a fabric swatch nobody will confirm. The stripes on his coat are either painted or stitched and he is moving toward a set of double doors that are always mid-swing, a folded slip of paper half-tucked at his collar, a receipt curling in his breast pocket next to a pen that almost works.",
     "title": "Fragment of Strobing Corridor With Unconfirmed Fabric and Mid-Swing — TF-200-17",
@@ -878,5 +868,25 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 571
+  },
+  {
+    "id": "runs-204",
+    "sentence": "A man stands waist-deep in a river that has been digitally stretched until its far bank is no longer visible, holding an auction paddle above his head with both arms while the number $4,338,500 dissolves in the current around him. On the near bank, a crowd mirrors his posture without meaning to, each person's arms slightly open, while someone else crouches at the waterline and slides a long cardboard tube — grandfather inside — gently into the widened Rhine.",
+    "title": null,
+    "date": "2026-07-20",
+    "mode": null,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 462
+  },
+  {
+    "id": "runs-202",
+    "sentence": "A man in a half-unbuttoned funeral shirt walks a fluorescent corridor between kennels and exhibits, dragging one hand along a wall someone built and abandoned, leaving a long smear at shoulder height that could be chalk or could be light. The kennel doors on his left hang half-latched, clicking softly as he passes, while ahead a museum doorway stands open onto a parking lot where a riding mower circles something in the asphalt, at dusk, indefinitely.",
+    "title": "Register of Chalk Smears Along Abandoned Corridor Walls — TF-202-28",
+    "date": "2026-07-19",
+    "mode": 2,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 454
   }
 ]
