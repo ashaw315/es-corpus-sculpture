@@ -870,16 +870,6 @@
     "length": 571
   },
   {
-    "id": "runs-204",
-    "sentence": "A man stands waist-deep in a river that has been digitally stretched until its far bank is no longer visible, holding an auction paddle above his head with both arms while the number $4,338,500 dissolves in the current around him. On the near bank, a crowd mirrors his posture without meaning to, each person's arms slightly open, while someone else crouches at the waterline and slides a long cardboard tube — grandfather inside — gently into the widened Rhine.",
-    "title": null,
-    "date": "2026-07-20",
-    "mode": null,
-    "style_mode": "REPRESENTATIONAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 462
-  },
-  {
     "id": "runs-202",
     "sentence": "A man in a half-unbuttoned funeral shirt walks a fluorescent corridor between kennels and exhibits, dragging one hand along a wall someone built and abandoned, leaving a long smear at shoulder height that could be chalk or could be light. The kennel doors on his left hang half-latched, clicking softly as he passes, while ahead a museum doorway stands open onto a parking lot where a riding mower circles something in the asphalt, at dusk, indefinitely.",
     "title": "Register of Chalk Smears Along Abandoned Corridor Walls — TF-202-28",
@@ -888,5 +878,25 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 454
+  },
+  {
+    "id": "runs-206",
+    "sentence": "Extreme close-up of a leather surface — dark, oil-darkened at the handle seam, with a faint palm-heat still radiating in infrared bloom across the grain, the stitching slightly compressed where fingers rehearsed the same grip many times, a residue of rubber and solvent worked into the pores alongside older pigment stains, matte and granular, where bristles dragged across the corner edge. The leather breathes a warmth that has no single source — part hand, part storage room, part something pressed and left and not retrieved — the surface tacky in the creases, cool at the flat center, the whole thing slowly exhaling in the tight, humid light.",
+    "title": null,
+    "date": "2026-07-21",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 648
+  },
+  {
+    "id": "runs-204",
+    "sentence": "A man stands waist-deep in a river that has been digitally stretched until its far bank is no longer visible, holding an auction paddle above his head with both arms while the number $4,338,500 dissolves in the current around him. On the near bank, a crowd mirrors his posture without meaning to, each person's arms slightly open, while someone else crouches at the waterline and slides a long cardboard tube — grandfather inside — gently into the widened Rhine.",
+    "title": "Catalogue of Dilated Riverbanks and Submerged Auction Numerals — TF-204-14",
+    "date": "2026-07-20",
+    "mode": 5,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 462
   }
 ]
