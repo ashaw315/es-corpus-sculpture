@@ -918,5 +918,15 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 603
+  },
+  {
+    "id": "runs-256",
+    "sentence": "A man stands in an empty parking lot in four consecutive cities simultaneously, holding the same expression from his headshot while a person with a clipboard notes the angle of his jaw, the white lines beneath his feet perfectly parallel each time. Behind him, 147 unread issues of a magazine fan out across the asphalt like a hand of cards, each cover featuring his face holding still until someone told him he could stop.",
+    "title": null,
+    "date": "2026-09-07",
+    "mode": null,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 423
   }
 ]
