@@ -938,5 +938,25 @@
     "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 510
+  },
+  {
+    "id": "runs-314",
+    "sentence": "A kitchen drawer filmed in extreme macro: layers of compressed detritus pressed flat by decades of sliding — waxy crayon residue, scissor-blade oil streaks, the faint green oxidation of forgotten coins — all lit by the cold fluorescent warmth of a bulb that has never been replaced, casting the wood grain in the yellow of a 2004 desktop screenshot, tacky and overexposed. The surface holds the ghost pressure of something heavy and rectangular that rested here too long, its outline embossed into the drawer-bottom like a binder page indent, the surrounding wood slightly darker where fingers reached past it repeatedly, leaving a ring of skin oil that has polymerized into something almost glossy, almost permanent, almost mint condition.",
+    "title": null,
+    "date": "2026-10-29",
+    "mode": null,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 740
+  },
+  {
+    "id": "runs-312",
+    "sentence": "Extreme close-up of worn velour transit seating — compressed fibers holding the exact shape of prolonged, performative stillness, body-heat still radiating from the indentation in slow thermal bloom, the fabric's nap flattened in a pattern too deliberate for commuting, too sustained for arrival. Beside it on a laminate surface: three paper rectangles laid edge-to-edge, their corners softened by handling, one showing the ghost of a red smear where a thumb pressed and reconsidered, the paper still faintly warm from a printer no one turned off.",
+    "title": "Fragment of Thermal Indentation in Decommissioned Velour Upholstery Panel — TF-312-34",
+    "date": "2026-10-28",
+    "mode": 3,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 547
   }
 ]
