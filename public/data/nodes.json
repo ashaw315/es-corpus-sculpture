@@ -970,16 +970,6 @@
     "length": 885
   },
   {
-    "id": "runs-320",
-    "sentence": "A porcelain sugar bowl sits open on a kitchen table, a phone number written inside it in faded ink, the handwriting slowly dissolving into the glaze as a wooden drawer across the room slides open and closed on its own, as if trying to remember something it no longer owns.",
-    "title": null,
-    "date": "2026-11-01",
-    "mode": null,
-    "style_mode": "REPRESENTATIONAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 272
-  },
-  {
     "id": "runs-318",
     "sentence": "Extreme close-up of layered asphalt surface, each stratum slightly warmer than the one above it, the topmost layer carrying a faint iridescent film of soapy water residue and fine wet sand granules pressed flat into microscopic pores, the whole mass slowly compressing under its own weight while a thumbprint-shaped smear of skin oil on the upper surface catches light at an angle that makes it briefly, almost unbearably, glossy. The layers beneath are darker and cooler and drier, stratified like photocopied pages stacked face-down, each one incrementally less warm, the bottommost entirely cold and granular and bearing the ghost-pressure of a door-width indent that has never fully released.",
     "title": "Dossier on Iridescent Compression Strata and Unreleased Threshold Indent — TF-318-23",
@@ -988,5 +978,15 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 696
+  },
+  {
+    "id": "runs-320",
+    "sentence": "A porcelain sugar bowl sits open on a kitchen table, a phone number written inside it in faded ink, the handwriting slowly dissolving into the glaze as a wooden drawer across the room slides open and closed on its own, as if trying to remember something it no longer owns.",
+    "title": "Inventory of Dissolving Numerals Within Domestic Porcelain Vessels — TF-320-12",
+    "date": "2026-11-01",
+    "mode": 7,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 272
   }
 ]
