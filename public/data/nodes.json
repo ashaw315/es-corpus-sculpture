@@ -920,16 +920,6 @@
     "length": 603
   },
   {
-    "id": "runs-256",
-    "sentence": "A man stands in an empty parking lot in four consecutive cities simultaneously, holding the same expression from his headshot while a person with a clipboard notes the angle of his jaw, the white lines beneath his feet perfectly parallel each time. Behind him, 147 unread issues of a magazine fan out across the asphalt like a hand of cards, each cover featuring his face holding still until someone told him he could stop.",
-    "title": "Inventory of Parallel Jaw Angles Across Consecutive Asphalt Grids — TF-256-23",
-    "date": "2026-09-07",
-    "mode": 2,
-    "style_mode": "REPRESENTATIONAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 423
-  },
-  {
     "id": "runs-287",
     "sentence": "A figure in a job site trailer hallway holds a damp printout at arm's length, its coffee-stained corner curling toward a floor-mounted fluorescent that hums without flickering, while around a small puncture in the paper's center the text spirals into itself in discrete loops that neither close nor open. The read receipt on a nearby laptop screen says *Opened* and a timestamp that has been 11 days for longer than 11 days, and the phone on the folding table is mid-ring, the sound arriving but never landing.",
     "title": "Specimen of Perpetual Receipt and Unresolved Spiral Puncture — TF-287-25",
@@ -940,14 +930,34 @@
     "length": 510
   },
   {
-    "id": "runs-312",
-    "sentence": "Extreme close-up of worn velour transit seating — compressed fibers holding the exact shape of prolonged, performative stillness, body-heat still radiating from the indentation in slow thermal bloom, the fabric's nap flattened in a pattern too deliberate for commuting, too sustained for arrival. Beside it on a laminate surface: three paper rectangles laid edge-to-edge, their corners softened by handling, one showing the ghost of a red smear where a thumb pressed and reconsidered, the paper still faintly warm from a printer no one turned off.",
-    "title": "Fragment of Thermal Indentation in Decommissioned Velour Upholstery Panel — TF-312-34",
-    "date": "2026-10-28",
-    "mode": 3,
-    "style_mode": "SENSORY/TEXTURAL",
+    "id": "runs-324",
+    "sentence": "A man in a reflective vest stands mid-stride in a half-lit parking structure at the exact hour when overhead fluorescents and remaining daylight cancel each other out, pressing a handheld lens against a load-bearing column while drone footage plays on a tablet propped against the concrete barrier, its screen still transmitting coordinates for a building that isn't there. Behind him, a folding table holds a laminated survey map with one corner worn soft from handling, and the asphalt beneath his feet holds the ghost-outline of a co-op that the county recorded as something else, the documentation mid-upload, the place mid-erasure, neither filed nor forgotten.",
+    "title": null,
+    "date": "2026-11-03",
+    "mode": null,
+    "style_mode": "LIMINAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 547
+    "length": 665
+  },
+  {
+    "id": "runs-256",
+    "sentence": "A man stands in an empty parking lot in four consecutive cities simultaneously, holding the same expression from his headshot while a person with a clipboard notes the angle of his jaw, the white lines beneath his feet perfectly parallel each time. Behind him, 147 unread issues of a magazine fan out across the asphalt like a hand of cards, each cover featuring his face holding still until someone told him he could stop.",
+    "title": "Inventory of Parallel Jaw Angles Across Consecutive Asphalt Grids — TF-256-23",
+    "date": "2026-09-07",
+    "mode": 2,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 423
+  },
+  {
+    "id": "runs-320",
+    "sentence": "A porcelain sugar bowl sits open on a kitchen table, a phone number written inside it in faded ink, the handwriting slowly dissolving into the glaze as a wooden drawer across the room slides open and closed on its own, as if trying to remember something it no longer owns.",
+    "title": "Inventory of Dissolving Numerals Within Domestic Porcelain Vessels — TF-320-12",
+    "date": "2026-11-01",
+    "mode": 7,
+    "style_mode": "REPRESENTATIONAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 272
   },
   {
     "id": "runs-314",
@@ -970,6 +980,16 @@
     "length": 885
   },
   {
+    "id": "runs-312",
+    "sentence": "Extreme close-up of worn velour transit seating — compressed fibers holding the exact shape of prolonged, performative stillness, body-heat still radiating from the indentation in slow thermal bloom, the fabric's nap flattened in a pattern too deliberate for commuting, too sustained for arrival. Beside it on a laminate surface: three paper rectangles laid edge-to-edge, their corners softened by handling, one showing the ghost of a red smear where a thumb pressed and reconsidered, the paper still faintly warm from a printer no one turned off.",
+    "title": "Fragment of Thermal Indentation in Decommissioned Velour Upholstery Panel — TF-312-34",
+    "date": "2026-10-28",
+    "mode": 3,
+    "style_mode": "SENSORY/TEXTURAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 547
+  },
+  {
     "id": "runs-318",
     "sentence": "Extreme close-up of layered asphalt surface, each stratum slightly warmer than the one above it, the topmost layer carrying a faint iridescent film of soapy water residue and fine wet sand granules pressed flat into microscopic pores, the whole mass slowly compressing under its own weight while a thumbprint-shaped smear of skin oil on the upper surface catches light at an angle that makes it briefly, almost unbearably, glossy. The layers beneath are darker and cooler and drier, stratified like photocopied pages stacked face-down, each one incrementally less warm, the bottommost entirely cold and granular and bearing the ghost-pressure of a door-width indent that has never fully released.",
     "title": "Dossier on Iridescent Compression Strata and Unreleased Threshold Indent — TF-318-23",
@@ -978,15 +998,5 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 696
-  },
-  {
-    "id": "runs-320",
-    "sentence": "A porcelain sugar bowl sits open on a kitchen table, a phone number written inside it in faded ink, the handwriting slowly dissolving into the glaze as a wooden drawer across the room slides open and closed on its own, as if trying to remember something it no longer owns.",
-    "title": "Inventory of Dissolving Numerals Within Domestic Porcelain Vessels — TF-320-12",
-    "date": "2026-11-01",
-    "mode": 7,
-    "style_mode": "REPRESENTATIONAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 272
   }
 ]
