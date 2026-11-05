@@ -930,16 +930,6 @@
     "length": 510
   },
   {
-    "id": "runs-324",
-    "sentence": "A man in a reflective vest stands mid-stride in a half-lit parking structure at the exact hour when overhead fluorescents and remaining daylight cancel each other out, pressing a handheld lens against a load-bearing column while drone footage plays on a tablet propped against the concrete barrier, its screen still transmitting coordinates for a building that isn't there. Behind him, a folding table holds a laminated survey map with one corner worn soft from handling, and the asphalt beneath his feet holds the ghost-outline of a co-op that the county recorded as something else, the documentation mid-upload, the place mid-erasure, neither filed nor forgotten.",
-    "title": null,
-    "date": "2026-11-03",
-    "mode": null,
-    "style_mode": "LIMINAL",
-    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
-    "length": 665
-  },
-  {
     "id": "runs-256",
     "sentence": "A man stands in an empty parking lot in four consecutive cities simultaneously, holding the same expression from his headshot while a person with a clipboard notes the angle of his jaw, the white lines beneath his feet perfectly parallel each time. Behind him, 147 unread issues of a magazine fan out across the asphalt like a hand of cards, each cover featuring his face holding still until someone told him he could stop.",
     "title": "Inventory of Parallel Jaw Angles Across Consecutive Asphalt Grids — TF-256-23",
@@ -998,5 +988,15 @@
     "style_mode": "SENSORY/TEXTURAL",
     "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
     "length": 696
+  },
+  {
+    "id": "runs-324",
+    "sentence": "A man in a reflective vest stands mid-stride in a half-lit parking structure at the exact hour when overhead fluorescents and remaining daylight cancel each other out, pressing a handheld lens against a load-bearing column while drone footage plays on a tablet propped against the concrete barrier, its screen still transmitting coordinates for a building that isn't there. Behind him, a folding table holds a laminated survey map with one corner worn soft from handling, and the asphalt beneath his feet holds the ghost-outline of a co-op that the county recorded as something else, the documentation mid-upload, the place mid-erasure, neither filed nor forgotten.",
+    "title": "Trace of Cancelled Daylight Over Unrecorded Structural Coordinates — TF-324-32",
+    "date": "2026-11-03",
+    "mode": 1,
+    "style_mode": "LIMINAL",
+    "artifact_url": "https://pub-dfd09c6a5bcd43dda4ed449bb2e01d95.r2.dev/hls/datamosh.m3u8",
+    "length": 665
   }
 ]
